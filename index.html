@@ -1,0 +1,638 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fundación Columbia · Tablero</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="https://fundacioncolumbia.org/wp-content/uploads/2026/04/cropped-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&family=Raleway:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --violeta:#7C479C; --violeta-osc:#753373; --violeta-claro:#F3EDF7;
+  --teal:#0E9384; --ambar:#C2751A;
+  --bg:#F7F6F9; --panel:#FFFFFF; --linea:#E6E2EA; --tx:#2B2630; --mut:#6E6775;
+  --bien:#1A7F4B; --mal:#C0392B; --aviso:#9A6A00;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 "PT Sans",system-ui,sans-serif}
+h1,h2,h3,.raleway{font-family:Raleway,system-ui,sans-serif}
+a{color:var(--violeta)}
+header{background:#fff;border-bottom:1px solid var(--linea)}
+.top{max-width:1280px;margin:0 auto;padding:14px 16px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+.marca{display:flex;align-items:center;gap:14px}
+.marca img{height:44px;width:auto}
+.marca h1{font-size:18px;margin:0;color:var(--violeta-osc);font-weight:600}
+.marca .sub{font-size:13px;color:var(--mut)}
+.ctrl{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+select,input[type=date],input[type=search]{font:inherit;font-size:14px;border:1px solid var(--linea);border-radius:8px;padding:7px 10px;background:#fff;color:var(--tx)}
+select:focus,input:focus,button:focus-visible{outline:2px solid var(--violeta);outline-offset:1px}
+nav{max-width:1280px;margin:0 auto;padding:0 16px;display:flex;gap:2px;overflow-x:auto}
+nav button{font:600 14px Raleway,sans-serif;border:0;background:none;color:var(--mut);padding:12px 12px;border-bottom:3px solid transparent;white-space:nowrap;cursor:pointer}
+nav button.on{color:var(--violeta-osc);border-color:var(--violeta)}
+main{max-width:1280px;margin:0 auto;padding:20px 16px 60px}
+section{display:none} section.on{display:block}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.card{background:var(--panel);border:1px solid var(--linea);border-radius:12px;padding:16px}
+.kpi .k{color:var(--mut);font-size:13px}
+.kpi .v{font:700 26px Raleway,sans-serif;margin-top:4px;color:var(--tx)}
+.kpi .d{font-size:13px;margin-top:2px;color:var(--mut)}
+.kpi.dest{border-top:4px solid var(--violeta)}
+.bien{color:var(--bien)} .mal{color:var(--mal)}
+h2{font-size:17px;margin:30px 0 10px;color:var(--violeta-osc)}
+h3{font-size:15px;margin:0 0 10px}
+p.nota{color:var(--mut);font-size:13px;margin:8px 0 0;max-width:920px}
+.two{display:grid;gap:12px;grid-template-columns:1fr 1fr} @media(max-width:860px){.two{grid-template-columns:1fr}}
+.wrap{overflow-x:auto;background:var(--panel);border:1px solid var(--linea);border-radius:12px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:9px 12px;border-bottom:1px solid var(--linea);text-align:right;white-space:nowrap}
+th{color:var(--mut);font-weight:700;font-size:13px;background:#FBFAFC;position:sticky;top:0}
+th.ord{cursor:pointer;user-select:none} th.ord:hover{color:var(--violeta)}
+th:first-child,td:first-child{text-align:left;white-space:normal;min-width:220px}
+tr:last-child td{border-bottom:0}
+tr.total td{font-weight:700;background:#FBFAFC}
+.tag{display:inline-block;font-size:12px;padding:1px 8px;border-radius:20px;background:var(--violeta-claro);color:var(--violeta-osc)}
+.tag.t{background:#E3F4F1;color:#0B6E63} .tag.a{background:#FBEEDD;color:#8A520F} .tag.g{background:#EEEDF0;color:var(--mut)}
+.graf{position:relative;height:240px}
+.leyenda{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--mut);margin-bottom:8px}
+.leyenda i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.embudo .fila{display:grid;grid-template-columns:minmax(180px,260px) 1fr 90px 80px;gap:12px;align-items:center;margin:10px 0}
+.embudo .nom b{display:block}
+.embudo .nom span{font-size:12px;color:var(--mut)}
+.barra{height:26px;background:var(--violeta-claro);border-radius:6px;overflow:hidden}
+.barra i{display:block;height:100%;background:var(--violeta);border-radius:6px}
+.num{font-variant-numeric:tabular-nums}
+.caida{font-size:13px;text-align:right;color:var(--mut)}
+.aviso{border-left:4px solid var(--aviso);background:#FFF8E6;padding:10px 14px;border-radius:6px;font-size:14px;margin:10px 0}
+.aviso.mal{border-color:var(--mal);background:#FDEDEB;color:var(--tx)}
+.aviso.ok{border-color:var(--bien);background:#E8F5EE}
+.cmp{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.cmpfila{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid var(--linea);padding:7px 0;font-size:14px}
+.cmpfila span:first-child{color:var(--mut)}
+.mejor{color:var(--bien);font-weight:700}
+.vacio{color:var(--mut);font-style:italic;padding:14px}
+#cargando{padding:60px 16px;text-align:center;color:var(--mut)}
+footer{max-width:1280px;margin:0 auto;padding:0 16px 40px;color:var(--mut);font-size:12px}
+@media(max-width:600px){.embudo .fila{grid-template-columns:1fr 70px;}.embudo .barra,.embudo .caida{grid-column:1 / -1}.kpi .v{font-size:22px}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="top">
+    <div class="marca">
+      <img src="https://fundacioncolumbia.org/wp-content/uploads/2026/04/cropped-logo.png" alt="Fundación Columbia">
+      <div><h1>Inscripciones y pauta</h1><div class="sub" id="actualizado">Cargando datos…</div></div>
+    </div>
+    <div class="ctrl">
+      <select id="periodo" aria-label="Período">
+        <option value="7">Últimos 7 días</option>
+        <option value="30" selected>Últimos 30 días</option>
+        <option value="90">Últimos 90 días</option>
+        <option value="mes">Mes en curso</option>
+        <option value="mesant">Mes anterior</option>
+        <option value="anio">Año 2026</option>
+        <option value="pers">Personalizado…</option>
+      </select>
+      <span id="persBox" style="display:none"><input type="date" id="desde" aria-label="Desde"> <input type="date" id="hasta" aria-label="Hasta"></span>
+    </div>
+  </div>
+  <nav id="nav">
+    <button class="on" data-p="resumen">Resumen</button>
+    <button data-p="formaciones">Formaciones</button>
+    <button data-p="comparar">Comparar</button>
+    <button data-p="embudo">Embudo de inscripción</button>
+    <button data-p="whatsapp">WhatsApp</button>
+    <button data-p="medios">Medios pagos</button>
+    <button data-p="sitio">Contenido y sitio</button>
+    <button data-p="medicion">Medición</button>
+  </nav>
+</header>
+
+<div id="cargando">Cargando datos…</div>
+
+<main id="main" style="display:none">
+
+<!-- ============ RESUMEN ============ -->
+<section id="resumen" class="on">
+  <div class="grid" id="kpis"></div>
+  <p class="nota" id="notaPeriodo"></p>
+
+  <h2>Inscripciones en el tiempo</h2>
+  <div class="card">
+    <div class="leyenda"><span><i style="background:var(--violeta)"></i>En la web</span><span><i style="background:var(--teal)"></i>Por WhatsApp o recepción</span></div>
+    <div class="graf"><canvas id="gInscr"></canvas></div>
+  </div>
+  <h2>Inversión en pauta en el tiempo</h2>
+  <div class="card">
+    <div class="leyenda"><span><i style="background:var(--violeta)"></i>Meta (en pesos, dólar BNA del día)</span></div>
+    <div class="graf"><canvas id="gInv"></canvas></div>
+  </div>
+  <p class="nota">Las inscripciones en la web se miden desde el 23 de octubre de 2026, cuando quedó instalada la medición nueva. Las ventas por WhatsApp o recepción salen de la planilla que carga el equipo de la Fundación, desde mayo de 2026.</p>
+</section>
+
+<!-- ============ FORMACIONES ============ -->
+<section id="formaciones">
+  <div class="ctrl" style="margin-bottom:12px"><input type="search" id="buscarF" placeholder="Buscar formación…" aria-label="Buscar formación"></div>
+  <h2 style="margin-top:0">En la web</h2>
+  <div class="wrap"><table id="tF"></table></div>
+  <p class="nota">Cada formación es un producto de la tienda. “Vieron la ficha” cuenta las veces que se abrió la página de la formación; “Eligieron modalidad” es cuando seleccionan modalidad y cantidad de asistentes; “Completaron asistentes” es cuando pasan al detalle de los asistentes; “Se inscribieron” es el pago confirmado (o la inscripción, si es gratuita). Tocá el título de una columna para ordenar.</p>
+
+  <h2>Por WhatsApp o recepción</h2>
+  <div class="wrap"><table id="tFoff"></table></div>
+  <p class="nota">Salen de la planilla de ventas que carga el equipo. Los nombres se agrupan por actividad: “cacao mayo” y “Cacao Mayo” cuentan juntas. Las ventas en dólares se cuentan pero no se suman a los pesos.</p>
+</section>
+
+<!-- ============ COMPARAR ============ -->
+<section id="comparar">
+  <div class="ctrl" style="margin-bottom:14px"><select id="c1" aria-label="Formación 1"></select><select id="c2" aria-label="Formación 2"></select><select id="c3" aria-label="Formación 3"></select></div>
+  <div class="cmp" id="cmp"></div>
+  <p class="nota">Hasta tres formaciones lado a lado, en el mismo período. En verde, la mejor de cada fila. Para comparar formaciones con precios distintos, mirá las tasas y no los pesos.</p>
+</section>
+
+<!-- ============ EMBUDO ============ -->
+<section id="embudo">
+  <div class="card embudo">
+    <h3>Inscripción con pago en la web · todo el catálogo</h3>
+    <div id="embWeb"></div>
+    <p class="nota">Cada barra muestra cuántas veces pasó ese paso en el período. La columna gris es cuánto se perdió respecto del paso anterior. Una persona que entra dos veces a la misma ficha cuenta dos veces.</p>
+  </div>
+  <div class="card embudo" style="margin-top:12px">
+    <h3>Inscripción por formulario de Google</h3>
+    <div id="embForm"></div>
+    <p class="nota">Algunas formaciones se inscriben con un formulario de Google y no con pago en la web. El sitio ve el clic que lleva al formulario, pero no si la persona lo completó: eso vive en la hoja de respuestas de cada formulario, que todavía no está conectada.</p>
+  </div>
+</section>
+
+<!-- ============ WHATSAPP ============ -->
+<section id="whatsapp">
+  <div class="grid" id="kpisWa"></div>
+  <div class="two" style="margin-top:12px">
+    <div class="card">
+      <h3>Clics a WhatsApp desde el sitio, por día</h3>
+      <div class="graf"><canvas id="gWa"></canvas></div>
+      <p class="nota">Son personas que tocaron un botón de WhatsApp en el sitio: muestran intención de contacto, no contactos confirmados.</p>
+    </div>
+    <div class="card">
+      <h3>Conversaciones que trajo la pauta de Meta</h3>
+      <div class="wrap" style="border:0"><table id="tWaMeta"></table></div>
+      <p class="nota">Las cuenta Meta: alguien vio un anuncio y abrió una conversación de WhatsApp. Estas conversaciones no pasan por el sitio. Cuántas terminan en inscripción se va a ver cuando crucemos con Clientify.</p>
+    </div>
+  </div>
+  <p class="nota">Los clics del sitio, las conversaciones de Meta y los contactos de Clientify miden cosas distintas: no se suman entre sí.</p>
+</section>
+
+<!-- ============ MEDIOS ============ -->
+<section id="medios">
+  <h2 style="margin-top:0">Meta</h2>
+  <div class="wrap"><table id="tMeta"></table></div>
+  <p class="nota">El resultado de cada campaña sale de cómo está configurada: si lleva a WhatsApp, cuenta conversaciones; si lleva al sitio, clics en el enlace. La cuenta publicitaria factura en dólares: los pesos usan el dólar oficial del Banco Nación (venta) del día de cada gasto.</p>
+
+  <h2>Google Ads</h2>
+  <div class="aviso">Todavía no hay cuenta de Google Ads activa para la Fundación. Cuando se cree, acá van a aparecer inversión, clics, inscripciones y costo por inscripción.</div>
+
+  <h2>Visitas al sitio que llegaron por pauta</h2>
+  <div class="wrap"><table id="tPaid"></table></div>
+  <p class="nota">Lo que ve Google Analytics de la gente que llegó al sitio desde un anuncio. La campaña de WhatsApp no aparece acá porque no lleva al sitio.</p>
+</section>
+
+<!-- ============ SITIO ============ -->
+<section id="sitio">
+  <h2 style="margin-top:0">De dónde llegan las visitas</h2>
+  <div class="wrap"><table id="tCanal"></table></div>
+  <h2>Fuentes principales</h2>
+  <div class="wrap"><table id="tFuente"></table></div>
+  <h2>Otras acciones en el sitio</h2>
+  <div class="wrap"><table id="tAcc"></table></div>
+  <p class="nota">“Visitas con interacción” son las que duraron más de 10 segundos, vieron más de una página o hicieron una acción.</p>
+</section>
+
+<!-- ============ MEDICION ============ -->
+<section id="medicion">
+  <h2 style="margin-top:0">Estado de cada fuente</h2>
+  <div class="wrap"><table id="tEstado"></table></div>
+  <h2>Filas de la planilla de ventas para revisar</h2>
+  <div id="alertas"></div>
+  <h2>Para tener en cuenta</h2>
+  <div id="notasMed"></div>
+</section>
+
+</main>
+
+<footer id="pie"></footer>
+
+<script>
+/* URL de la app web de Apps Script que devuelve el JSON. Se puede pisar con ?datos=URL */
+const API = 'https://script.google.com/macros/s/AKfycbxYRZ5n_KDJ7XafgtPsKTVWIDcHQElHuX8MjV7SUxgX1Bj6usrZjVSOr4bbnBNq5tzv/exec';
+
+const C = { violeta:'#7C479C', violetaOsc:'#753373', teal:'#0E9384', ambar:'#C2751A', linea:'#E6E2EA', mut:'#6E6775' };
+const $ = id => document.getElementById(id);
+let D = null, P = null;
+const graficos = {};
+
+/* ---------- formato ---------- */
+const nf = new Intl.NumberFormat('es-AR');
+const n0 = x => x == null || isNaN(x) ? '—' : nf.format(Math.round(x));
+const pesos = x => x == null || isNaN(x) ? '—' : '$ ' + nf.format(Math.round(x));
+const pesosC = x => {
+  if (x == null || isNaN(x)) return '—';
+  const a = Math.abs(x);
+  if (a >= 1e6) return '$ ' + (x / 1e6).toLocaleString('es-AR', { maximumFractionDigits: 2 }) + ' M';
+  if (a >= 1e4) return '$ ' + (x / 1e3).toLocaleString('es-AR', { maximumFractionDigits: 0 }) + ' mil';
+  return '$ ' + nf.format(Math.round(x));
+};
+const usd = x => x == null ? '—' : 'US$ ' + x.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+const pct = (a, b) => !b ? '—' : (100 * a / b).toLocaleString('es-AR', { maximumFractionDigits: 1 }) + '%';
+const fechaL = f => { const [y, m, d] = f.split('-'); return d + '/' + m + '/' + y; };
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+/* ---------- fechas ---------- */
+const iso = d => d.toISOString().slice(0, 10);
+const sumar = (f, n) => { const d = new Date(f + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return iso(d); };
+const dias = (a, b) => Math.round((new Date(b + 'T12:00:00Z') - new Date(a + 'T12:00:00Z')) / 864e5) + 1;
+function rangoDias(a, b) { const r = []; for (let f = a; f <= b; f = sumar(f, 1)) r.push(f); return r; }
+
+function calcularPeriodo() {
+  const v = $('periodo').value, h = D.hasta;
+  let a, b = h;
+  if (v === 'mes') a = h.slice(0, 8) + '01';
+  else if (v === 'mesant') { const p = sumar(h.slice(0, 8) + '01', -1); a = p.slice(0, 8) + '01'; b = p; }
+  else if (v === 'anio') a = h.slice(0, 4) + '-01-01';
+  else if (v === 'pers') { a = $('desde').value || sumar(h, -29); b = $('hasta').value || h; if (a > b) [a, b] = [b, a]; }
+  else a = sumar(h, -(+v - 1));
+  const n = dias(a, b);
+  return { a, b, pa: sumar(a, -n), pb: sumar(a, -1), n };
+}
+
+/* ---------- datos ---------- */
+const filas = t => t.f.map(r => { const o = {}; t.c.forEach((c, i) => o[c] = r[i]); return o; });
+const en = (x, a, b) => x.fecha >= a && x.fecha <= b;
+const suma = (arr, k) => arr.reduce((s, x) => s + (+x[k] || 0), 0);
+
+function ev(a, b, nombre) { return suma(D.eventos.filter(x => x.evento === nombre && en(x, a, b)), 'eventos'); }
+
+function calc(a, b) {
+  const tr = D.trafico.filter(x => en(x, a, b));
+  const meta = D.meta.filter(x => en(x, a, b));
+  const ven = D.ventas.filter(x => en(x, a, b));
+  const comp = D.compras.filter(x => en(x, a, b));
+  const venArs = ven.filter(x => x.moneda === 'ARS' && x.importe != null);
+  const metaWa = meta.filter(x => x.resultado_tipo === 'conversaciones');
+  return {
+    sesiones: suma(tr, 'sesiones'),
+    inscrWeb: suma(tr, 'compras'),
+    inscrWebPagas: comp.filter(x => x.ingresos > 0).reduce((s, x) => s + x.compras, 0),
+    ingresosWeb: suma(tr, 'ingresos'),
+    ventasOff: ven.length,
+    ingresosOff: suma(venArs, 'importe'),
+    invMetaArs: suma(meta, 'gasto_ars'),
+    invMetaUsd: suma(meta, 'gasto_usd'),
+    convMeta: suma(meta, 'conversaciones'),
+    gastoWaArs: suma(metaWa, 'gasto_ars'),
+    convWa: suma(metaWa, 'resultados'),
+    clicsWa: ev(a, b, 'clic_whatsapp'),
+    fichas: ev(a, b, 'view_item'),
+  };
+}
+
+/* ---------- componentes ---------- */
+function delta(act, ant, bueno) {   // bueno: 1 si subir es bueno, -1 si subir es malo, 0 neutro
+  if (!ant || act == null) return '<span>sin dato del período anterior</span>';
+  const d = (act - ant) / ant;
+  if (Math.abs(d) < 0.005) return '<span>igual que el período anterior</span>';
+  const sube = d > 0, cls = bueno === 0 ? '' : ((sube ? 1 : -1) * bueno > 0 ? 'bien' : 'mal');
+  return '<span class="' + cls + '">' + (sube ? '▲ ' : '▼ ') + Math.abs(d * 100).toLocaleString('es-AR', { maximumFractionDigits: 0 }) + '%</span> vs período anterior';
+}
+function kpi(k, v, d, dest) { return '<div class="card kpi' + (dest ? ' dest' : '') + '"><div class="k">' + k + '</div><div class="v num">' + v + '</div><div class="d">' + d + '</div></div>'; }
+
+/* Tabla ordenable. cols: [{t:título, k:clave, f:formato, izq:bool}] */
+function tabla(el, cols, datos, opts = {}) {
+  const st = el._orden || { k: opts.orden || cols[1].k, dir: -1 };
+  el._orden = st;
+  const ord = datos.slice().sort((x, y) => {
+    const a = x[st.k], b = y[st.k];
+    if (a == null && b == null) return 0; if (a == null) return 1; if (b == null) return -1;
+    return (typeof a === 'string' ? a.localeCompare(b) : a - b) * st.dir;
+  });
+  const cab = '<thead><tr>' + cols.map(c => '<th class="ord" data-k="' + c.k + '">' + c.t + (st.k === c.k ? (st.dir < 0 ? ' ▾' : ' ▴') : '') + '</th>').join('') + '</tr></thead>';
+  const cuerpo = ord.length ? ord.map(r => '<tr>' + cols.map(c => '<td' + (c.num !== false && c !== cols[0] ? ' class="num"' : '') + '>' + (c.f ? c.f(r[c.k], r) : esc(r[c.k])) + '</td>').join('') + '</tr>').join('')
+    : '<tr><td colspan="' + cols.length + '" class="vacio">Sin datos en este período.</td></tr>';
+  const tot = opts.total ? '<tr class="total">' + cols.map((c, i) => '<td' + (i ? ' class="num"' : '') + '>' + (i === 0 ? 'Total' : (opts.total[c.k] != null ? (c.f ? c.f(opts.total[c.k], opts.total) : opts.total[c.k]) : '')) + '</td>').join('') + '</tr>' : '';
+  el.innerHTML = cab + '<tbody>' + cuerpo + (ord.length ? tot : '') + '</tbody>';
+  el.querySelectorAll('th.ord').forEach(th => th.onclick = () => {
+    const k = th.dataset.k; st.dir = st.k === k ? -st.dir : -1; st.k = k; tabla(el, cols, datos, opts);
+  });
+}
+
+/* Agrupa la serie diaria por semana (lunes) o por mes cuando el período es largo */
+function agrupar(labels, series) {
+  const gran = labels.length > 200 ? 'mes' : labels.length > 62 ? 'semana' : 'dia';
+  if (gran === 'dia') return { gran, labels, series };
+  const clave = f => {
+    if (gran === 'mes') return f.slice(0, 7) + '-01';
+    const d = new Date(f + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7)); return iso(d);
+  };
+  const L = [], idx = {};
+  labels.forEach(f => { const k = clave(f); if (!(k in idx)) { idx[k] = L.length; L.push(k); } });
+  return { gran, labels: L, series: series.map(s => Object.assign({}, s, { d: L.map(() => 0) })).map((s, j) => {
+    labels.forEach((f, i) => { s.d[idx[clave(f)]] += series[j].d[i]; }); return s; }) };
+}
+
+function barras(id, labelsDia, seriesDia, formato) {
+  const { gran, labels, series } = agrupar(labelsDia, seriesDia);
+  const titulo = l => gran === 'mes' ? 'Mes ' + l.slice(5, 7) + '/' + l.slice(0, 4) : gran === 'semana' ? 'Semana del ' + fechaL(l) : fechaL(l);
+  const tick = l => gran === 'mes' ? l.slice(5, 7) + '/' + l.slice(2, 4) : l.slice(8, 10) + '/' + l.slice(5, 7);
+  if (graficos[id]) graficos[id].destroy();
+  graficos[id] = new Chart($(id), {
+    type: 'bar',
+    data: { labels, datasets: series.map(s => ({ label: s.n, data: s.d, backgroundColor: s.c, borderRadius: 4, borderSkipped: 'start', maxBarThickness: 28, borderColor: '#fff', borderWidth: series.length > 1 ? { top: 2 } : 0 })) },
+    options: {
+      maintainAspectRatio: false, animation: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { display: false }, tooltip: { callbacks: {
+        title: it => titulo(it[0].label),
+        label: it => ' ' + it.dataset.label + ': ' + (formato ? formato(it.raw) : n0(it.raw)) } } },
+      scales: {
+        x: { stacked: true, grid: { display: false }, ticks: { color: C.mut, maxRotation: 0, autoSkip: true, maxTicksLimit: 10, callback: function (v) { return tick(this.getLabelForValue(v)); } } },
+        y: { stacked: true, beginAtZero: true, grid: { color: C.linea }, border: { display: false }, ticks: { color: C.mut, precision: 0, callback: v => formato ? formato(v) : n0(v) } }
+      }
+    }
+  });
+}
+function porDia(arr, a, b, k, filtro) {
+  const m = {}; arr.forEach(x => { if (en(x, a, b) && (!filtro || filtro(x))) m[x.fecha] = (m[x.fecha] || 0) + (k ? (+x[k] || 0) : 1); });
+  return rangoDias(a, b).map(f => m[f] || 0);
+}
+
+/* ---------- páginas ---------- */
+function pResumen() {
+  const A = calc(P.a, P.b), B = calc(P.pa, P.pb);
+  const costoConv = A.convWa ? A.gastoWaArs / A.convWa : null, costoConvB = B.convWa ? B.gastoWaArs / B.convWa : null;
+  $('kpis').innerHTML = [
+    kpi('Inscripciones totales', n0(A.inscrWeb + A.ventasOff), n0(A.inscrWeb) + ' en la web · ' + n0(A.ventasOff) + ' por WhatsApp o recepción', true),
+    kpi('Ingresos por inscripciones', pesosC(A.ingresosWeb + A.ingresosOff), pesosC(A.ingresosWeb) + ' web · ' + pesosC(A.ingresosOff) + ' fuera de la web', true),
+    kpi('Inversión en pauta', pesosC(A.invMetaArs), 'Meta ' + usd(A.invMetaUsd) + ' · Google: sin cuenta todavía', true),
+    kpi('Inscripciones en la web', n0(A.inscrWeb), n0(A.inscrWebPagas) + ' pagas · ' + n0(A.inscrWeb - A.inscrWebPagas) + ' gratuitas'),
+    kpi('Ventas por WhatsApp o recepción', n0(A.ventasOff), delta(A.ventasOff, B.ventasOff, 1)),
+    kpi('Conversaciones de WhatsApp desde Meta', n0(A.convMeta), delta(A.convMeta, B.convMeta, 1)),
+    kpi('Costo por conversación (Meta)', pesos(costoConv), delta(costoConv, costoConvB, -1)),
+    kpi('Clics a WhatsApp desde el sitio', n0(A.clicsWa), 'intención de contacto, no contactos'),
+    kpi('Visitas al sitio', n0(A.sesiones), delta(A.sesiones, B.sesiones, 1)),
+  ].join('');
+  $('notaPeriodo').textContent = 'Período: ' + fechaL(P.a) + ' al ' + fechaL(P.b) + ' (' + P.n + ' días). Se compara contra los ' + P.n + ' días anteriores. El día de hoy no se incluye porque todavía está incompleto.';
+  const L = rangoDias(P.a, P.b);
+  barras('gInscr', L, [
+    { n: 'En la web', d: porDia(D.trafico, P.a, P.b, 'compras'), c: C.violeta },
+    { n: 'Por WhatsApp o recepción', d: porDia(D.ventas, P.a, P.b), c: C.teal }]);
+  barras('gInv', L, [{ n: 'Meta', d: porDia(D.meta, P.a, P.b, 'gasto_ars'), c: C.violeta }], pesosC);
+}
+
+function itemsPeriodo(a, b) {
+  const m = {};
+  D.items.filter(x => en(x, a, b)).forEach(x => {
+    const o = m[x.item_id] = m[x.item_id] || { id: x.item_id, item: x.item, vistos: 0, agregados: 0, en_checkout: 0, comprados: 0, ingresos: 0 };
+    ['vistos', 'agregados', 'en_checkout', 'comprados', 'ingresos'].forEach(k => o[k] += +x[k] || 0);
+  });
+  return Object.values(m).map(o => (o.tasa = o.vistos ? o.comprados / o.vistos : null, o));
+}
+
+function pFormaciones() {
+  const q = ($('buscarF').value || '').toLowerCase();
+  const it = itemsPeriodo(P.a, P.b).filter(o => !q || String(o.item).toLowerCase().includes(q));
+  const tot = { vistos: suma(it, 'vistos'), agregados: suma(it, 'agregados'), en_checkout: suma(it, 'en_checkout'), comprados: suma(it, 'comprados'), ingresos: suma(it, 'ingresos') };
+  tot.tasa = tot.vistos ? tot.comprados / tot.vistos : null;
+  tabla($('tF'), [
+    { t: 'Formación', k: 'item' },
+    { t: 'Vieron la ficha', k: 'vistos', f: n0 },
+    { t: 'Eligieron modalidad', k: 'agregados', f: n0 },
+    { t: 'Completaron asistentes', k: 'en_checkout', f: n0 },
+    { t: 'Se inscribieron', k: 'comprados', f: v => '<b>' + n0(v) + '</b>' },
+    { t: 'Ingresos', k: 'ingresos', f: pesos },
+    { t: 'Ficha → inscripción', k: 'tasa', f: v => v == null ? '—' : pct(v, 1) },
+  ], it, { orden: 'vistos', total: tot });
+
+  const off = {};
+  D.ventas.filter(x => en(x, P.a, P.b)).forEach(x => {
+    const k = x.actividad || 'Sin identificar';
+    const o = off[k] = off[k] || { actividad: k, tipo: x.tipo, n: 0, ars: 0, usd: 0, sinImporte: 0, sena: 0 };
+    o.n++;
+    if (x.importe == null) o.sinImporte++; else if (x.moneda === 'USD') o.usd += x.importe; else o.ars += x.importe;
+    if (x.es_sena === 'si') o.sena++;
+  });
+  const offL = Object.values(off).filter(o => !q || o.actividad.toLowerCase().includes(q));
+  tabla($('tFoff'), [
+    { t: 'Actividad', k: 'actividad', f: (v, r) => esc(v) + (r.tipo === 'formacion' ? ' <span class="tag">formación</span>' : '') },
+    { t: 'Ventas', k: 'n', f: v => '<b>' + n0(v) + '</b>' },
+    { t: 'Ingresos en pesos', k: 'ars', f: pesos },
+    { t: 'En dólares', k: 'usd', f: v => v ? usd(v) : '—' },
+    { t: 'Señas', k: 'sena', f: v => v ? n0(v) : '—' },
+    { t: 'Sin importe legible', k: 'sinImporte', f: v => v ? '<span class="mal">' + n0(v) + '</span>' : '—' },
+  ], offL, { orden: 'n', total: { n: suma(offL, 'n'), ars: suma(offL, 'ars'), usd: suma(offL, 'usd'), sena: suma(offL, 'sena'), sinImporte: suma(offL, 'sinImporte') } });
+}
+
+function pComparar() {
+  const it = itemsPeriodo(P.a, P.b).sort((x, y) => y.vistos - x.vistos);
+  const sels = [$('c1'), $('c2'), $('c3')];
+  const prev = sels.map(s => s.value);
+  sels.forEach((s, k) => {
+    s.innerHTML = it.map((o, i) => '<option value="' + esc(o.id) + '">' + esc(o.item) + '</option>').join('');
+    if (prev[k] && it.some(o => String(o.id) === prev[k])) s.value = prev[k]; else if (it[k]) s.value = it[k].id;
+    s.onchange = pComparar;
+  });
+  if (!it.length) { $('cmp').innerHTML = '<div class="vacio">Sin datos de formaciones en este período.</div>'; return; }
+  const sel = sels.map(s => it.find(o => String(o.id) === s.value)).filter(Boolean);
+  const filasC = [
+    ['Vieron la ficha', o => o.vistos, 1, n0],
+    ['Eligieron modalidad', o => o.agregados, 1, n0],
+    ['Completaron asistentes', o => o.en_checkout, 1, n0],
+    ['Se inscribieron', o => o.comprados, 1, n0],
+    ['Ingresos', o => o.ingresos, 1, pesos],
+    ['Ficha → inscripción', o => o.vistos ? o.comprados / o.vistos : null, 1, v => pct(v, 1)],
+    ['Ficha → eligió modalidad', o => o.vistos ? o.agregados / o.vistos : null, 1, v => pct(v, 1)],
+    ['Eligió modalidad → inscripción', o => o.agregados ? o.comprados / o.agregados : null, 1, v => pct(v, 1)],
+  ];
+  $('cmp').innerHTML = sel.map(o => '<div class="card"><h3>' + esc(o.item) + '</h3>' + filasC.map(r => {
+    const vals = sel.map(r[1]).filter(v => v != null);
+    const mejor = vals.length > 1 ? Math.max(...vals) : null;
+    const x = r[1](o);
+    return '<div class="cmpfila"><span>' + r[0] + '</span><span class="num ' + (mejor !== null && x === mejor && mejor > 0 ? 'mejor' : '') + '">' + (x == null ? '—' : r[3](x)) + '</span></div>';
+  }).join('') + '</div>').join('');
+}
+
+function embudo(el, pasos) {
+  const max = Math.max(1, pasos[0].v);
+  el.innerHTML = pasos.map((p, i) => {
+    const prev = i ? pasos[i - 1].v : null;
+    const caida = i && prev ? '−' + pct(Math.max(0, prev - p.v), prev) : '';
+    return '<div class="fila"><div class="nom"><b>' + p.n + '</b><span>' + p.e + '</span></div><div class="barra"><i style="width:' + Math.max(1, 100 * p.v / max) + '%"></i></div><div class="num" style="text-align:right;font-weight:700">' + n0(p.v) + '</div><div class="caida">' + caida + '</div></div>';
+  }).join('');
+}
+function pEmbudo() {
+  const e = n => ev(P.a, P.b, n);
+  embudo($('embWeb'), [
+    { n: 'Vio una ficha', e: 'Abrió la página de una formación', v: e('view_item') },
+    { n: 'Tocó “Abonar”', e: 'Quiso empezar a inscribirse', v: e('clic_abonar') },
+    { n: 'Ingresó o se registró', e: 'Para pagar hace falta tener cuenta', v: e('login') + e('sign_up') },
+    { n: 'Eligió modalidad', e: 'Seleccionó modalidad y cantidad de asistentes', v: e('add_to_cart') },
+    { n: 'Completó asistentes', e: 'Cargó los datos de quienes asisten', v: e('begin_checkout') },
+    { n: 'Salió a pagar', e: 'Fue a Mercado Pago', v: e('add_payment_info') },
+    { n: 'Inscripción confirmada', e: 'Volvió con el pago aprobado', v: e('purchase') },
+  ]);
+  embudo($('embForm'), [
+    { n: 'Vio una ficha', e: 'Todas las formaciones', v: e('view_item') },
+    { n: 'Fue al formulario', e: 'Tocó el link al formulario de Google', v: e('clic_google_form') },
+  ]);
+}
+
+function pWhatsapp() {
+  const A = calc(P.a, P.b), B = calc(P.pa, P.pb);
+  $('kpisWa').innerHTML = [
+    kpi('Clics a WhatsApp desde el sitio', n0(A.clicsWa), delta(A.clicsWa, B.clicsWa, 1), true),
+    kpi('Conversaciones desde anuncios de Meta', n0(A.convMeta), delta(A.convMeta, B.convMeta, 1), true),
+    kpi('Inscriptos que vinieron por WhatsApp', '—', 'cuando se conecte Clientify', true),
+  ].join('');
+  barras('gWa', rangoDias(P.a, P.b), [{ n: 'Clics a WhatsApp', d: porDia(D.eventos, P.a, P.b, 'eventos', x => x.evento === 'clic_whatsapp'), c: C.teal }]);
+  const m = {};
+  D.meta.filter(x => en(x, P.a, P.b) && x.conversaciones > 0).forEach(x => {
+    const o = m[x.campania] = m[x.campania] || { campania: x.campania, conv: 0, ars: 0 };
+    o.conv += x.conversaciones; o.ars += x.gasto_ars || 0;
+  });
+  const L = Object.values(m).map(o => (o.costo = o.conv ? o.ars / o.conv : null, o));
+  tabla($('tWaMeta'), [
+    { t: 'Campaña', k: 'campania' },
+    { t: 'Conversaciones', k: 'conv', f: v => '<b>' + n0(v) + '</b>' },
+    { t: 'Costo por conversación', k: 'costo', f: pesos },
+  ], L, { orden: 'conv' });
+}
+
+const NOMBRE_RES = { conversaciones: 'Conversaciones', clics_enlace: 'Clics en el enlace', landing: 'Visitas a la página', alcance: 'Personas alcanzadas', compras: 'Compras', leads: 'Formularios', thruplays: 'Reproducciones', visitas_perfil: 'Visitas al perfil' };
+function pMedios() {
+  const m = {};
+  D.meta.filter(x => en(x, P.a, P.b)).forEach(x => {
+    const o = m[x.campania] = m[x.campania] || { campania: x.campania, tipo: x.resultado_tipo, destino: x.destino, res: 0, usd: 0, ars: 0, imp: 0, clics: 0 };
+    o.res += x.resultados; o.usd += x.gasto_usd; o.ars += x.gasto_ars || 0; o.imp += x.impresiones; o.clics += x.clics_enlace;
+  });
+  const L = Object.values(m).filter(o => o.usd > 0 || o.res > 0).map(o => (o.costo = o.res ? o.ars / o.res : null, o));
+  tabla($('tMeta'), [
+    { t: 'Campaña', k: 'campania', f: (v, r) => esc(v) + ' <span class="tag ' + (r.tipo === 'conversaciones' ? 't' : '') + '">' + (r.destino === 'WHATSAPP' ? 'WhatsApp' : 'Sitio web') + '</span>' },
+    { t: 'Resultado', k: 'tipo', f: v => NOMBRE_RES[v] || v },
+    { t: 'Resultados', k: 'res', f: v => '<b>' + n0(v) + '</b>' },
+    { t: 'Inversión US$', k: 'usd', f: usd },
+    { t: 'Inversión en pesos', k: 'ars', f: pesos },
+    { t: 'Costo por resultado', k: 'costo', f: pesos },
+    { t: 'Impresiones', k: 'imp', f: n0 },
+    { t: 'Clics en el enlace', k: 'clics', f: n0 },
+  ], L, { orden: 'ars', total: { usd: suma(L, 'usd'), ars: suma(L, 'ars'), imp: suma(L, 'imp'), clics: suma(L, 'clics') } });
+
+  const p = {};
+  D.trafico.filter(x => en(x, P.a, P.b) && /^Paid|Cross-network|Display/.test(x.canal)).forEach(x => {
+    const k = x.fuente_medio;
+    const o = p[k] = p[k] || { fm: k, canal: x.canal, ses: 0, comp: 0, ing: 0 };
+    o.ses += x.sesiones; o.comp += x.compras; o.ing += x.ingresos;
+  });
+  tabla($('tPaid'), [
+    { t: 'Fuente / medio', k: 'fm', f: (v, r) => esc(v) + ' <span class="tag g">' + esc(r.canal) + '</span>' },
+    { t: 'Visitas', k: 'ses', f: n0 },
+    { t: 'Inscripciones en la web', k: 'comp', f: n0 },
+    { t: 'Ingresos', k: 'ing', f: pesos },
+  ], Object.values(p), { orden: 'ses' });
+}
+
+const NOMBRE_CANAL = { 'Organic Search': 'Búsqueda en Google (orgánica)', 'Direct': 'Directo', 'Paid Social': 'Redes (pauta)', 'Organic Social': 'Redes (orgánico)', 'Referral': 'Otros sitios', 'AI Assistant': 'Asistentes de IA', 'Paid Search': 'Búsqueda (pauta)', 'Email': 'Email', 'Unassigned': 'Sin identificar', 'Organic Video': 'Video (orgánico)', 'Cross-network': 'Google Ads (varias redes)', 'Display': 'Display (pauta)' };
+const ACCIONES = [
+  ['ver_mas_ficha', '“+ Ver más” en una ficha'], ['clic_docente', 'Clic en un docente'], ['file_download', 'Descarga de un archivo (programa)'],
+  ['view_item_list', 'Vio un listado de formaciones'], ['select_item', 'Eligió una formación de un listado'], ['view_promotion', 'Vio un banner'], ['select_promotion', 'Clic en un banner'],
+  ['clic_redes', 'Clic a redes sociales'], ['clic_externo', 'Clic a otros sitios'], ['clic_email', 'Clic en un mail'], ['clic_telefono', 'Clic en un teléfono'],
+  ['clic_boletin', 'Clic en el boletín'], ['clic_alquiler_salas', 'Clic en alquiler de salas'], ['clic_colaborar', 'Clic en colaborar'],
+  ['form_submit_contacto', 'Envió el formulario de contacto'], ['view_search_results', 'Usó el buscador'], ['page_not_found', 'Llegó a una página que no existe'],
+];
+function pSitio() {
+  const tr = D.trafico.filter(x => en(x, P.a, P.b));
+  const ag = (k, nom) => {
+    const m = {};
+    tr.forEach(x => {
+      const o = m[x[k]] = m[x[k]] || { n: nom ? (nom[x[k]] || x[k]) : x[k], ses: 0, nuevos: 0, comp: 0, inscr: 0, ing: 0 };
+      o.ses += x.sesiones; o.nuevos += x.usuarios_nuevos; o.comp += x.sesiones_comprometidas; o.inscr += x.compras; o.ing += x.ingresos;
+    });
+    return Object.values(m).map(o => (o.tasa = o.ses ? o.comp / o.ses : null, o));
+  };
+  const cols = [
+    { t: 'Canal', k: 'n' }, { t: 'Visitas', k: 'ses', f: n0 }, { t: 'Personas nuevas', k: 'nuevos', f: n0 },
+    { t: 'Visitas con interacción', k: 'tasa', f: v => v == null ? '—' : pct(v, 1) },
+    { t: 'Inscripciones en la web', k: 'inscr', f: n0 }, { t: 'Ingresos', k: 'ing', f: pesos }];
+  const canales = ag('canal', NOMBRE_CANAL);
+  tabla($('tCanal'), cols, canales, { orden: 'ses', total: { ses: suma(canales, 'ses'), nuevos: suma(canales, 'nuevos'), inscr: suma(canales, 'inscr'), ing: suma(canales, 'ing') } });
+  const fuentes = ag('fuente_medio').sort((x, y) => y.ses - x.ses).slice(0, 15);
+  tabla($('tFuente'), [Object.assign({}, cols[0], { t: 'Fuente / medio' })].concat(cols.slice(1)), fuentes, { orden: 'ses' });
+  const acc = ACCIONES.map(([e, n]) => ({ n, v: ev(P.a, P.b, e), ant: ev(P.pa, P.pb, e) })).filter(o => o.v || o.ant);
+  tabla($('tAcc'), [{ t: 'Acción', k: 'n' }, { t: 'Veces', k: 'v', f: n0 }, { t: 'Período anterior', k: 'ant', f: n0 }], acc, { orden: 'v' });
+}
+
+const ALERTA_TXT = { importe_dudoso: 'No se puede leer el importe', sin_importe: 'Falta el importe', importe_cero: 'Importe en cero', importe_en_dolares: 'Importe en dólares (no se suma a los pesos)', importe_atipico: 'Importe muy distinto al habitual', fecha_ilegible: 'No se puede leer la fecha', fecha_fuera_de_mes: 'La fecha no corresponde al mes de la pestaña', actividad_sin_mapear: 'Actividad que el tablero todavía no reconoce' };
+const FUENTE_TXT = { ventas: 'Planilla de ventas por fuera de la web', meta: 'Meta (pauta)', cotizacion: 'Dólar oficial BNA', ga4: 'Google Analytics (sitio)', google_ads: 'Google Ads' };
+function pMedicion() {
+  const est = Object.keys(FUENTE_TXT).map(k => {
+    const e = D.estado[k];
+    return { f: FUENTE_TXT[k], cuando: e ? e.cuando : null, estado: e ? e.estado : (k === 'google_ads' ? 'pendiente' : 'sin corridas'), msg: e ? e.mensaje : (k === 'google_ads' ? 'Falta crear la cuenta' : '') };
+  });
+  tabla($('tEstado'), [
+    { t: 'Fuente', k: 'f' },
+    { t: 'Estado', k: 'estado', f: v => v === 'ok' ? '<span class="bien">✔ al día</span>' : v === 'error' ? '<span class="mal">✖ con error</span>' : '<span class="tag g">' + esc(v) + '</span>' },
+    { t: 'Última actualización', k: 'cuando', f: v => v ? fechaL(v.slice(0, 10)) + ' ' + v.slice(11, 16) : '—' },
+    { t: 'Detalle', k: 'msg', f: v => '<span style="white-space:normal">' + esc(v) + '</span>' },
+  ], est, { orden: 'f' });
+
+  const al = D.alertas;
+  $('alertas').innerHTML = !al.length ? '<div class="aviso ok">No hay filas con problemas en la planilla.</div>'
+    : '<div class="wrap"><table><thead><tr><th>Dónde</th><th>Fecha</th><th style="text-align:left">Qué pasa</th></tr></thead><tbody>' + al.map(x => '<tr><td>Pestaña ' + esc(x.pestana) + ', fila ' + esc(x.fila) + '</td><td class="num">' + (x.fecha ? fechaL(x.fecha) : '—') + '</td><td style="text-align:left;white-space:normal">' + String(x.alertas).split(/,\s*(?![^(]*\))/).map(c => { const m = c.match(/^([a-z_]+)/); return esc(ALERTA_TXT[m ? m[1] : c] || c); }).join(' · ') + '</td></tr>').join('') + '</tbody></table></div><p class="nota">Las ventas con problemas se cuentan igual. Los importes que no se pueden leer no se suman hasta que se corrijan en la planilla.</p>';
+
+  $('notasMed').innerHTML = [
+    '<div class="aviso"><b>Precio de la Formación en Astrología 2027.</b> En la web figura “$ 110,00”. Si es un error de carga, las inscripciones de esa formación van a mostrar ingresos mil veces menores.</div>',
+    '<div class="aviso"><b>Google Analytics antes del 23/10/2026.</b> Entre enero y abril hay visitas de una instalación anterior, sin inscripciones ni clics. Entre mayo y el 22 de octubre no hay datos. Las inscripciones en la web y los clics se miden desde el 23 de octubre.</div>',
+    '<div class="aviso"><b>Formularios de Google.</b> Se ve el clic que lleva al formulario, pero no las respuestas. Para contarlas hace falta acceso a la hoja de respuestas de cada formulario.</div>',
+    '<div class="aviso"><b>Clientify.</b> Las conversaciones de WhatsApp todavía no se cruzan con las ventas: por eso no se puede decir cuántas terminan en inscripción.</div>',
+  ].join('');
+}
+
+/* ---------- arranque ---------- */
+function render() {
+  P = calcularPeriodo();
+  const pag = document.querySelector('section.on').id;
+  ({ resumen: pResumen, formaciones: pFormaciones, comparar: pComparar, embudo: pEmbudo, whatsapp: pWhatsapp, medios: pMedios, sitio: pSitio, medicion: pMedicion })[pag]();
+}
+
+document.querySelectorAll('#nav button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('#nav button, section').forEach(e => e.classList.remove('on'));
+  b.classList.add('on'); $(b.dataset.p).classList.add('on');
+  try { history.replaceState(null, '', '#' + b.dataset.p); } catch (e) {}
+  if (D) render();
+});
+$('periodo').onchange = () => { $('persBox').style.display = $('periodo').value === 'pers' ? '' : 'none'; render(); };
+$('desde').onchange = $('hasta').onchange = render;
+$('buscarF').oninput = () => pFormaciones();
+
+async function cargar() {
+  const url = new URLSearchParams(location.search).get('datos') || API;
+  try {
+    const r = await fetch(url);
+    const j = await r.json();
+    D = j;
+    ['ventas', 'alertas', 'meta', 'trafico', 'eventos', 'items', 'compras'].forEach(k => D[k] = filas(j[k]));
+  } catch (e) {
+    $('cargando').innerHTML = 'No se pudieron cargar los datos. Probá recargar la página en unos minutos.';
+    return;
+  }
+  $('cargando').style.display = 'none'; $('main').style.display = '';
+  const g = D.generado;
+  $('actualizado').textContent = 'Datos hasta el ' + fechaL(D.hasta) + ' · actualizado ' + fechaL(g.slice(0, 10)) + ' ' + g.slice(11, 16);
+  $('desde').value = sumar(D.hasta, -29); $('hasta').value = D.hasta; $('desde').max = $('hasta').max = D.hasta;
+  $('pie').innerHTML = 'Inscripción en la web = pago confirmado en la tienda (o inscripción a una actividad gratuita). Venta por WhatsApp o recepción = fila de la planilla que carga el equipo. Conversaciones de Meta, clics a WhatsApp y contactos de Clientify miden cosas distintas: no se suman. Dólar oficial BNA del último día: ' + pesos(D.cotizacion.ultima) + '.';
+  const h = location.hash.slice(1);
+  if (h && $(h) && $(h).tagName === 'SECTION') document.querySelector('#nav button[data-p="' + h + '"]').click(); else render();
+}
+cargar();
+</script>
+</body>
+</html>
