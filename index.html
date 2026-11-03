@@ -116,6 +116,25 @@ main{max-width:1440px} .top,nav,footer{max-width:1440px}
 .blk .row{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:6px 0;border-top:1px solid var(--linea);font-size:13px;align-items:baseline}
 .blk .row .l{color:var(--mut)} .blk .row .v{font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
 .blk .row .d{grid-column:1 / -1;font-size:11px;color:var(--mut);margin-top:-2px}
+.panel5{display:grid;gap:12px;grid-template-columns:repeat(5,1fr)} @media(max-width:1100px){.panel5{grid-template-columns:repeat(3,1fr)}} @media(max-width:620px){.panel5{grid-template-columns:1fr 1fr}}
+.kst{background:var(--panel);border:1px solid var(--linea);border-top:4px solid var(--violeta);border-radius:12px;padding:10px 14px 6px}
+.kst .k{font:700 11px Raleway,sans-serif;text-transform:uppercase;letter-spacing:.05em;color:var(--violeta-osc)}
+.kst .v{font:700 26px/1.2 Raleway,sans-serif;font-variant-numeric:tabular-nums;margin-top:2px} .kst .d{font-size:11px;color:var(--mut);min-height:14px}
+.spark{display:block;width:100%;height:30px;margin-top:4px}
+.sit2{display:grid;gap:12px;grid-template-columns:3fr 2fr;align-items:stretch} @media(max-width:1000px){.sit2{grid-template-columns:1fr}}
+.hbar-cab,.hbar{display:grid;grid-template-columns:minmax(0,1fr) 34% 70px 46px;gap:8px;align-items:center}
+.hbar-cab{font-size:11px;color:var(--mut);font-weight:700;margin-bottom:4px} .hbar-cab span:nth-child(n+3){text-align:right}
+.hbar{font-size:12.5px;padding:3px 0;border-top:1px solid var(--linea)}
+.hbar .n{white-space:nowrap;overflow:hidden;text-overflow:ellipsis} .hbar .n small{color:var(--mut);margin-left:4px}
+.hbar .b{position:relative;height:16px;background:#F3EEF6;border-radius:4px}
+.hbar .b i{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:var(--violeta)}
+.hbar .b em{position:absolute;left:6px;top:0;line-height:16px;font-style:normal;font-size:11.5px;font-weight:700;color:#fff;font-variant-numeric:tabular-nums}
+.hbar .b em.fuera{color:var(--tx)}
+.hbar .r{text-align:right;font-variant-numeric:tabular-nums} .hbar .r b{font-weight:700}
+.mosaico{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}
+.mos{border:1px solid var(--linea);border-radius:10px;padding:8px 10px 4px;background:#FCFBFD}
+.mos .k{font-size:12px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis} .mos .v{font:700 20px Raleway,sans-serif;font-variant-numeric:tabular-nums}
+.mos .d{font-size:11px;color:var(--mut)} .mos.dest{border-color:#BFE3DD;background:#F2FAF8}
 .card.comp{padding:12px 16px} .card.comp .graf{height:190px} .card.comp .graf.alto{height:116px} .card.comp .graf.bajo{height:84px;margin-top:4px}
 .leyenda i.ln{height:3px;border-radius:2px;vertical-align:3px}
 .evo{display:grid;gap:12px;grid-template-columns:repeat(3,1fr)} @media(max-width:900px){.evo{grid-template-columns:1fr}}
@@ -272,13 +291,39 @@ p.periodo{margin:0 0 10px;font-size:12px}
 
 <!-- ============ SITIO ============ -->
 <section id="sitio">
-  <h2 style="margin-top:0">De dónde llegan las visitas</h2>
-  <div class="wrap"><table id="tCanal"></table></div>
-  <h2>Fuentes principales</h2>
-  <div class="wrap"><table id="tFuente"></table></div>
-  <h2>Otras acciones en el sitio</h2>
-  <div class="wrap"><table id="tAcc"></table></div>
-  <p class="nota">“Visitas con interacción” son las que duraron más de 10 segundos, vieron más de una página o hicieron una acción.</p>
+  <div class="panel5" id="kSitio"></div>
+
+  <div class="sit2" style="margin-top:12px">
+    <div class="card comp">
+      <h3 class="tit">Visitas por día según canal</h3>
+      <div class="leyenda" id="leyCanal"></div>
+      <div class="graf" style="height:230px"><canvas id="gCanal"></canvas></div>
+    </div>
+    <div class="card comp">
+      <h3 class="tit">Canales</h3>
+      <div class="hbar-cab"><span></span><span>Visitas</span><span>Interacción</span><span>Inscr.</span></div>
+      <div id="bCanal"></div>
+    </div>
+  </div>
+
+  <div class="two" style="margin-top:12px">
+    <div class="card comp">
+      <h3 class="tit">Fuentes / medios y campañas · 10 principales</h3>
+      <div class="hbar-cab"><span></span><span>Visitas</span><span>Interacción</span><span>Inscr.</span></div>
+      <div id="bFuente"></div>
+    </div>
+    <div class="card comp">
+      <h3 class="tit">Formaciones más vistas · 10 principales</h3>
+      <div class="hbar-cab"><span></span><span>Vieron la ficha</span><span>Ficha → inscr.</span><span>Inscr.</span></div>
+      <div id="bForm"></div>
+    </div>
+  </div>
+
+  <div class="card comp" style="margin-top:12px">
+    <h3 class="tit">Qué hace la gente en el sitio</h3>
+    <div class="mosaico" id="mAcc"></div>
+  </div>
+  <p class="nota">“Interacción” es el % de visitas que duraron más de 10 segundos, vieron más de una página o hicieron una acción. Las acciones y las inscripciones en la web se miden desde el 23/10/2026.</p>
 </section>
 
 <!-- ============ MEDICION ============ -->
@@ -813,26 +858,82 @@ const ACCIONES = [
   ['clic_boletin', 'Clic en el boletín'], ['clic_alquiler_salas', 'Clic en alquiler de salas'], ['clic_colaborar', 'Clic en colaborar'],
   ['form_submit_contacto', 'Envió el formulario de contacto'], ['view_search_results', 'Usó el buscador'], ['page_not_found', 'Llegó a una página que no existe'],
 ];
+/* Mini-línea de tendencia (SVG). Con períodos largos se agrupa por semana o mes, igual que los gráficos. */
+function spark(labelsDia, d, color) {
+  const g = agrupar(labelsDia, [{ d }]), v = g.series[0].d;
+  if (!v.length) return '';
+  const max = Math.max(...v, 1), n = v.length;
+  const pts = v.map((y, i) => (n === 1 ? 50 : i * 100 / (n - 1)).toFixed(2) + ',' + (28 - y / max * 25).toFixed(2));
+  return '<svg class="spark" viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true"><polygon points="0,30 ' + pts.join(' ') + ' 100,30" fill="' + color + '" fill-opacity=".12"/><polyline points="' + pts.join(' ') + '" fill="none" stroke="' + color + '" stroke-width="1.6" vector-effect="non-scaling-stroke"/></svg>';
+}
+/* Fila de barra horizontal: nombre · barra con el número adentro · dos columnas a la derecha */
+function hbar(nombre, extra, v, max, color, r1, r2, titulo) {
+  const w = max ? Math.max(1, 100 * v / max) : 0;
+  return '<div class="hbar" title="' + esc(titulo || nombre) + '"><div class="n">' + esc(nombre) + (extra ? '<small>' + esc(extra) + '</small>' : '') + '</div>' +
+    '<div class="b"><i style="width:' + w + '%;background:' + color + '"></i><em class="' + (w < 28 ? 'fuera' : '') + '"' + (w < 28 ? ' style="left:calc(' + w + '% + 6px)"' : '') + '>' + n0(v) + '</em></div>' +
+    '<div class="r">' + r1 + '</div><div class="r"><b>' + r2 + '</b></div></div>';
+}
+const COLORES_CANAL = ['#7C479C', '#0E9384', '#C2751A', '#3E7CB1', '#B5487A', '#8A9A2B'];
 function pSitio() {
-  const tr = D.trafico.filter(x => en(x, P.a, P.b));
-  const ag = (k, nom) => {
+  const L = rangoDias(P.a, P.b);
+  const webComparable = P.pa >= INICIO_WEB;
+  const tr = D.trafico.filter(x => en(x, P.a, P.b)), trB = D.trafico.filter(x => en(x, P.pa, P.pb));
+  const tot = t => ({ ses: suma(t, 'sesiones'), nuevos: suma(t, 'usuarios_nuevos'), comp: suma(t, 'sesiones_comprometidas'), inscr: suma(t, 'compras') });
+  const A = tot(tr), B = tot(trB);
+  const dWeb = (a, b) => webComparable ? delta(a, b, 1) : '<span>la web se mide desde el 23/10</span>';
+  const pd = k => porDia(D.trafico, P.a, P.b, k);
+  const ses = pd('sesiones'), comp = pd('sesiones_comprometidas'), ins = pd('compras');
+  const ratio = (num, den) => num.map((v, i) => den[i] ? v / den[i] : 0);
+  const kst = (k, v, d, sp) => '<div class="kst"><div class="k">' + k + '</div><div class="v">' + v + '</div><div class="d">' + d + '</div>' + sp + '</div>';
+  $('kSitio').innerHTML = [
+    kst('Visitas', n0(A.ses), delta(A.ses, B.ses, 1), spark(L, ses, C.violeta)),
+    kst('Personas nuevas', n0(A.nuevos), delta(A.nuevos, B.nuevos, 1), spark(L, pd('usuarios_nuevos'), C.violeta)),
+    kst('Visitas con interacción', A.ses ? pct(A.comp, A.ses) : '—', delta(A.ses ? A.comp / A.ses : null, B.ses ? B.comp / B.ses : null, 1), spark(L, ratio(comp, ses), C.teal)),
+    kst('Inscripciones en la web', n0(A.inscr), dWeb(A.inscr, B.inscr), spark(L, ins, C.teal)),
+    kst('Visita → inscripción', A.ses ? pct(A.inscr, A.ses) : '—', webComparable ? delta(A.ses ? A.inscr / A.ses : null, B.ses ? B.inscr / B.ses : null, 1) : '<span>la web se mide desde el 23/10</span>', spark(L, ratio(ins, ses), C.ambar)),
+  ].join('');
+
+  // Canales: los 5 con más visitas, el resto como "Otros"
+  const ag = (filas, clave) => {
     const m = {};
-    tr.forEach(x => {
-      const o = m[x[k]] = m[x[k]] || { n: nom ? (nom[x[k]] || x[k]) : x[k], ses: 0, nuevos: 0, comp: 0, inscr: 0, ing: 0 };
-      o.ses += x.sesiones; o.nuevos += x.usuarios_nuevos; o.comp += x.sesiones_comprometidas; o.inscr += x.compras; o.ing += x.ingresos;
+    filas.forEach(x => {
+      const k = clave(x);
+      const o = m[k] = m[k] || { k, ses: 0, comp: 0, inscr: 0 };
+      o.ses += x.sesiones; o.comp += x.sesiones_comprometidas; o.inscr += x.compras;
     });
-    return Object.values(m).map(o => (o.tasa = o.ses ? o.comp / o.ses : null, o));
+    return Object.values(m).sort((x, y) => y.ses - x.ses);
   };
-  const cols = [
-    { t: 'Canal', k: 'n' }, { t: 'Visitas', k: 'ses', f: n0 }, { t: 'Personas nuevas', k: 'nuevos', f: n0 },
-    { t: 'Visitas con interacción', k: 'tasa', f: v => v == null ? '—' : pct(v, 1) },
-    { t: 'Inscripciones en la web', k: 'inscr', f: n0 }, { t: 'Ingresos', k: 'ing', f: pesos }];
-  const canales = ag('canal', NOMBRE_CANAL);
-  tabla($('tCanal'), cols, canales, { orden: 'ses', total: { ses: suma(canales, 'ses'), nuevos: suma(canales, 'nuevos'), inscr: suma(canales, 'inscr'), ing: suma(canales, 'ing') } });
-  const fuentes = ag('fuente_medio').sort((x, y) => y.ses - x.ses).slice(0, 15);
-  tabla($('tFuente'), [Object.assign({}, cols[0], { t: 'Fuente / medio' })].concat(cols.slice(1)), fuentes, { orden: 'ses' });
-  const acc = ACCIONES.map(([e, n]) => ({ n, v: ev(P.a, P.b, e), ant: ev(P.pa, P.pb, e) })).filter(o => o.v || o.ant);
-  tabla($('tAcc'), [{ t: 'Acción', k: 'n' }, { t: 'Veces', k: 'v', f: n0 }, { t: 'Período anterior', k: 'ant', f: n0 }], acc, { orden: 'v' });
+  const canales = ag(tr, x => NOMBRE_CANAL[x.canal] || x.canal);
+  const top = canales.slice(0, 5).map(c => c.k);
+  const grupo = x => { const n = NOMBRE_CANAL[x.canal] || x.canal; return top.includes(n) ? n : 'Otros'; };
+  const grupos = top.concat(canales.length > 5 ? ['Otros'] : []);
+  const color = g => g === 'Otros' ? '#B9B3BF' : COLORES_CANAL[top.indexOf(g)];
+  $('leyCanal').innerHTML = grupos.map(g => '<span><i style="background:' + color(g) + '"></i>' + esc(g) + '</span>').join('');
+  grafico('gCanal', L, { barras: grupos.map(g => ({ n: g, d: porDia(D.trafico, P.a, P.b, 'sesiones', x => grupo(x) === g), c: color(g) })), pctDelTotal: 'de las visitas' });
+
+  const maxC = canales.length ? canales[0].ses : 0;
+  $('bCanal').innerHTML = canales.map(c => hbar(c.k, '', c.ses, maxC, top.includes(c.k) ? color(c.k) : '#B9B3BF',
+    c.ses ? pct(c.comp, c.ses) : '—', n0(c.inscr), c.k + ': ' + pct(c.ses, A.ses) + ' de las visitas')).join('') || '<div class="vacio">Sin datos en este período.</div>';
+
+  // Fuente / medio + campaña
+  const sinCamp = v => !v || /^\(.*\)$/.test(v) || /^\d+$/.test(v);   // los IDs numéricos (Meta) no dicen nada
+  const fuentes = ag(tr, x => x.fuente_medio + '||' + (sinCamp(x.campania) ? '' : x.campania)).slice(0, 10);
+  const maxF = fuentes.length ? fuentes[0].ses : 0;
+  $('bFuente').innerHTML = fuentes.map(f => { const [fm, cp] = f.k.split('||');
+    return hbar(fm, cp, f.ses, maxF, C.violeta, f.ses ? pct(f.comp, f.ses) : '—', n0(f.inscr), fm + (cp ? ' · campaña: ' + cp : '') + ' · ' + pct(f.ses, A.ses) + ' de las visitas'); }).join('') || '<div class="vacio">Sin datos en este período.</div>';
+
+  // Formaciones más vistas
+  const it = itemsPeriodo(P.a, P.b).sort((x, y) => y.vistos - x.vistos).slice(0, 10);
+  const maxI = it.length ? it[0].vistos : 0;
+  $('bForm').innerHTML = it.map(o => hbar(o.item, '', o.vistos, maxI, C.teal, o.vistos ? pct(o.comprados, o.vistos) : '—', n0(o.comprados))).join('') || '<div class="vacio">Sin datos en este período.</div>';
+
+  // Acciones: primero WhatsApp y formulario, después el resto que tenga datos
+  const lista = [['clic_whatsapp', 'Clics a WhatsApp', 1], ['clic_google_form', 'Clics al formulario de Google', 1]].concat(ACCIONES.map(([e, n]) => [e, n, 0]));
+  $('mAcc').innerHTML = lista.map(([e, n, dest]) => ({ e, n, dest, v: ev(P.a, P.b, e), ant: ev(P.pa, P.pb, e) }))
+    .filter(o => o.dest || o.v || o.ant)
+    .map(o => '<div class="mos' + (o.dest ? ' dest' : '') + '"><div class="k" title="' + esc(o.n) + '">' + esc(o.n) + '</div><div class="v">' + n0(o.v) + '</div><div class="d">' +
+      (webComparable ? delta(o.v, o.ant, o.e === 'page_not_found' ? -1 : 1) : '&nbsp;') + '</div>' +
+      spark(L, porDia(D.eventos, P.a, P.b, 'eventos', x => x.evento === o.e), o.dest ? C.teal : C.violeta) + '</div>').join('');
 }
 
 const ALERTA_TXT = { importe_dudoso: 'No se puede leer el importe', sin_importe: 'Falta el importe', importe_cero: 'Importe en cero', importe_en_dolares: 'Importe en dólares: se pasa a pesos con el dólar BNA del día', importe_sin_miles: 'Importe cargado sin los miles (ej. $28 en vez de $28.000): se tomó en miles', importe_atipico: 'Importe muy distinto al habitual', fecha_ilegible: 'No se puede leer la fecha', fecha_fuera_de_mes: 'La fecha no corresponde al mes de la pestaña', actividad_sin_mapear: 'Actividad que el tablero todavía no reconoce' };
