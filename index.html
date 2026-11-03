@@ -79,6 +79,19 @@ tr.total td{font-weight:700;background:#FBFAFC}
 #cargando{padding:60px 16px;text-align:center;color:var(--mut)}
 footer{max-width:1280px;margin:0 auto;padding:0 16px 40px;color:var(--mut);font-size:12px}
 @media(max-width:600px){.embudo .fila{grid-template-columns:1fr 70px;}.embudo .barra,.embudo .caida{grid-column:1 / -1}.kpi .v{font-size:22px}}
+/* ---- resumen tipo tablero de control ---- */
+main{max-width:1440px} .top,nav,footer{max-width:1440px}
+.panel4{display:grid;gap:12px;grid-template-columns:repeat(4,1fr)}
+@media(max-width:1100px){.panel4{grid-template-columns:repeat(2,1fr)}} @media(max-width:620px){.panel4{grid-template-columns:1fr}}
+.blk{background:var(--panel);border:1px solid var(--linea);border-top:4px solid var(--violeta);border-radius:12px;padding:12px 16px 8px}
+.blk h3,.tit{font:700 12px Raleway,sans-serif;text-transform:uppercase;letter-spacing:.05em;color:var(--violeta-osc);margin:0 0 6px}
+.blk .big{font:700 30px/1.15 Raleway,sans-serif;font-variant-numeric:tabular-nums}
+.blk .bigd{font-size:12px;color:var(--mut);margin:2px 0 8px}
+.blk .row{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:6px 0;border-top:1px solid var(--linea);font-size:13px;align-items:baseline}
+.blk .row .l{color:var(--mut)} .blk .row .v{font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+.blk .row .d{grid-column:1 / -1;font-size:11px;color:var(--mut);margin-top:-2px}
+.card.comp{padding:12px 16px} .card.comp .graf{height:190px} .card.comp .leyenda{margin-bottom:4px;font-size:12px}
+p.periodo{margin:0 0 10px;font-size:12px}
 </style>
 </head>
 <body>
@@ -121,19 +134,21 @@ footer{max-width:1280px;margin:0 auto;padding:0 16px 40px;color:var(--mut);font-
 <!-- ============ RESUMEN ============ -->
 <section id="resumen" class="on">
   <p class="nota periodo" id="notaPeriodo"></p>
-  <div id="kpis"></div>
+  <div class="panel4" id="kpis"></div>
 
-  <h2>Inscripciones en el tiempo</h2>
-  <div class="card">
-    <div class="leyenda"><span><i style="background:var(--violeta)"></i>En la web</span><span><i style="background:var(--teal)"></i>Por WhatsApp o recepción</span></div>
-    <div class="graf"><canvas id="gInscr"></canvas></div>
+  <div class="two" style="margin-top:12px">
+    <div class="card comp">
+      <h3 class="tit">Inscripciones por día</h3>
+      <div class="leyenda"><span><i style="background:var(--violeta)"></i>En la web</span><span><i style="background:var(--teal)"></i>Por WhatsApp o recepción</span></div>
+      <div class="graf"><canvas id="gInscr"></canvas></div>
+    </div>
+    <div class="card comp">
+      <h3 class="tit">Inversión en pauta por día</h3>
+      <div class="leyenda"><span><i style="background:var(--violeta)"></i>Meta, en pesos al dólar BNA del día</span></div>
+      <div class="graf"><canvas id="gInv"></canvas></div>
+    </div>
   </div>
-  <h2>Inversión en pauta en el tiempo</h2>
-  <div class="card">
-    <div class="leyenda"><span><i style="background:var(--violeta)"></i>Meta (en pesos, dólar BNA del día)</span></div>
-    <div class="graf"><canvas id="gInv"></canvas></div>
-  </div>
-  <p class="nota">Las inscripciones en la web se miden desde el 23 de octubre de 2026, cuando quedó instalada la medición nueva. Las inscripciones por WhatsApp o recepción salen de la planilla que carga el equipo de la Fundación, desde mayo de 2026.</p>
+  <p class="nota">Las inscripciones en la web se miden desde el 23/10/2026. Las inscripciones por WhatsApp o recepción salen de la planilla que carga el equipo, desde mayo de 2026.</p>
 </section>
 
 <!-- ============ FORMACIONES ============ -->
@@ -370,35 +385,41 @@ function porDia(arr, a, b, k, filtro) {
 }
 
 /* ---------- páginas ---------- */
+const INICIO_WEB = '2026-10-23';   // desde acá se miden inscripciones, ingresos y clics en la web
 function pResumen() {
   const A = calc(P.a, P.b), B = calc(P.pa, P.pb);
+  const webComparable = P.pa >= INICIO_WEB;           // el período anterior también tiene medición web
+  const dWeb = (a, b, bueno) => webComparable ? delta(a, b, bueno) : '<span>sin comparación: la web se mide desde el 23/10</span>';
   const costoConv = A.convWa ? A.gastoWaArs / A.convWa : null, costoConvB = B.convWa ? B.gastoWaArs / B.convWa : null;
-  const bloque = (titulo, tarjetas) => '<h2 class="bloque">' + titulo + '</h2><div class="grid3">' + tarjetas.join('') + '</div>';
   const iTot = A.inscrWeb + A.ventasOff, iTotB = B.inscrWeb + B.ventasOff;
   const $Tot = A.ingresosWeb + A.ingresosOff, $TotB = B.ingresosWeb + B.ingresosOff;
+  const ticket = A.inscrWebPagas ? A.ingresosWeb / A.inscrWebPagas : null;
+  const fila = (l, v, d) => '<div class="row"><span class="l">' + l + '</span><span class="v">' + v + '</span>' + (d ? '<span class="d">' + d + '</span>' : '') + '</div>';
+  const blk = (t, big, bigd, filas) => '<div class="blk"><h3>' + t + '</h3><div class="big">' + big + '</div><div class="bigd">' + bigd + '</div>' + filas.join('') + '</div>';
   $('kpis').innerHTML = [
-    bloque('Inscripciones', [
-      kpi('Inscripciones totales', n0(iTot), delta(iTot, iTotB, 1), true),
-      kpi('Inscripciones en la web', n0(A.inscrWeb), n0(A.inscrWebPagas) + ' pagas · ' + n0(A.inscrWeb - A.inscrWebPagas) + ' gratuitas'),
-      kpi('Inscripciones por WhatsApp o recepción', n0(A.ventasOff), delta(A.ventasOff, B.ventasOff, 1)),
+    blk('Inscripciones', n0(iTot), dWeb(iTot, iTotB, 1), [
+      fila('En la web', n0(A.inscrWeb), n0(A.inscrWebPagas) + ' pagas · ' + n0(A.inscrWeb - A.inscrWebPagas) + ' gratuitas'),
+      fila('Por WhatsApp o recepción', n0(A.ventasOff), delta(A.ventasOff, B.ventasOff, 1)),
+      fila('Ficha → inscripción en la web', A.fichas ? pct(A.inscrWeb, A.fichas) : '—'),
     ]),
-    bloque('Ingresos', [
-      kpi('Ingresos totales', pesos($Tot), delta($Tot, $TotB, 1), true),
-      kpi('Ingresos en la web', pesos(A.ingresosWeb), delta(A.ingresosWeb, B.ingresosWeb, 1)),
-      kpi('Ingresos por WhatsApp o recepción', pesos(A.ingresosOff), delta(A.ingresosOff, B.ingresosOff, 1)),
+    blk('Ingresos', pesos($Tot), dWeb($Tot, $TotB, 1), [
+      fila('En la web', pesos(A.ingresosWeb)),
+      fila('Por WhatsApp o recepción', pesos(A.ingresosOff), delta(A.ingresosOff, B.ingresosOff, 1)),
+      fila('Ticket promedio en la web', pesos(ticket)),
     ]),
-    bloque('Pauta', [
-      kpi('Inversión en pauta', pesos(A.invMetaArs), 'Meta ' + usd(A.invMetaUsd) + ' · Google: sin cuenta todavía', true),
-      kpi('Conversaciones de WhatsApp desde Meta', n0(A.convMeta), delta(A.convMeta, B.convMeta, 1)),
-      kpi('Costo por conversación (Meta)', pesos(costoConv), delta(costoConv, costoConvB, -1)),
+    blk('Pauta', pesos(A.invMetaArs), delta(A.invMetaArs, B.invMetaArs, 0), [
+      fila('Meta en dólares', usd(A.invMetaUsd)),
+      fila('Conversaciones de WhatsApp', n0(A.convMeta), delta(A.convMeta, B.convMeta, 1)),
+      fila('Costo por conversación', pesos(costoConv), delta(costoConv, costoConvB, -1)),
+      fila('Google Ads', '<span class="tag g">sin cuenta todavía</span>'),
     ]),
-    bloque('Sitio', [
-      kpi('Visitas al sitio', n0(A.sesiones), delta(A.sesiones, B.sesiones, 1), true),
-      kpi('Fichas de formaciones vistas', n0(A.fichas), delta(A.fichas, B.fichas, 1)),
-      kpi('Clics a WhatsApp desde el sitio', n0(A.clicsWa), 'intención de contacto, no contactos'),
+    blk('Sitio', n0(A.sesiones) + ' <span style="font-size:14px;font-weight:600;color:var(--mut)">visitas</span>', delta(A.sesiones, B.sesiones, 1), [
+      fila('Fichas de formaciones vistas', n0(A.fichas), dWeb(A.fichas, B.fichas, 1)),
+      fila('Clics a WhatsApp', n0(A.clicsWa), dWeb(A.clicsWa, B.clicsWa, 1)),
+      fila('Clics al formulario de Google', n0(ev(P.a, P.b, 'clic_google_form'))),
     ]),
   ].join('');
-  $('notaPeriodo').textContent = 'Período: ' + fechaL(P.a) + ' al ' + fechaL(P.b) + ' (' + P.n + (P.n === 1 ? ' día' : ' días') + '). Se compara contra ' + (P.n === 1 ? 'el día anterior' : 'los ' + P.n + ' días anteriores') + '. El día de hoy no se incluye porque todavía está incompleto.';
+  $('notaPeriodo').textContent = fechaL(P.a) + ' al ' + fechaL(P.b) + ' (' + P.n + (P.n === 1 ? ' día' : ' días') + ') · comparado con ' + (P.n === 1 ? 'el día anterior' : 'los ' + P.n + ' días anteriores') + ' · el día de hoy no se incluye porque está incompleto';
   const L = rangoDias(P.a, P.b);
   barras('gInscr', L, [
     { n: 'En la web', d: porDia(D.trafico, P.a, P.b, 'compras'), c: C.violeta },
