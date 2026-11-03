@@ -61,15 +61,26 @@ tr.total td{font-weight:700;background:#FBFAFC}
 .graf{position:relative;height:240px}
 .leyenda{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--mut);margin-bottom:8px}
 .leyenda i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
-.embudo .fila{display:grid;grid-template-columns:minmax(180px,260px) 1fr 80px 120px 120px;gap:12px;align-items:center;margin:10px 0}
-.embudo .fila.cab{margin:4px 0 0;font-size:12px;color:var(--mut);font-weight:700}
+.embs{display:grid;gap:12px;grid-template-columns:3fr 2fr;align-items:start}
+.embs .embudo + .embudo .fila{grid-template-columns:118px 1fr 50px 66px 66px} @media(max-width:1000px){.embs{grid-template-columns:1fr}}
+.embudo{padding:12px 16px}
+.embudo .hd{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:4px}
+.embudo .hd .conv{font-size:12px;color:var(--mut)} .embudo .hd .conv b{font:700 18px Raleway,sans-serif;color:var(--violeta-osc)}
+.embudo .fila{display:grid;grid-template-columns:150px 1fr 60px 74px 74px;gap:8px;align-items:center;margin:2px 0;font-size:13px}
+.embudo .fila.cab{font-size:11px;color:var(--mut);font-weight:700;line-height:1.15;margin-bottom:4px}
 .embudo .fila.cab div{text-align:right}
-.embudo .nom b{display:block}
-.embudo .nom span{font-size:12px;color:var(--mut)}
-.barra{height:26px;background:var(--violeta-claro);border-radius:6px;overflow:hidden}
-.barra i{display:block;height:100%;background:var(--violeta);border-radius:6px}
+.embudo .nom{font-weight:700;cursor:help;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fbar{height:22px;display:flex;justify-content:center}
+.fbar i{display:block;height:100%;background:var(--violeta);border-radius:4px}
+.fbar.nd i{background:repeating-linear-gradient(45deg,var(--violeta-claro),var(--violeta-claro) 5px,#fff 5px,#fff 10px);border:1px dashed var(--violeta)}
+.embudo .nota{margin:6px 0 0;font-size:11px}
 .num{font-variant-numeric:tabular-nums}
-.caida{font-size:13px;text-align:right;color:var(--mut)}
+.caida{font-size:12px;text-align:right;color:var(--mut);font-variant-numeric:tabular-nums}
+.cpr{display:inline-block;min-width:64px;padding:1px 8px;border-radius:20px;font-weight:700;text-align:center}
+.cpr.v{background:#E3F4EA;color:#1A7F4B} .cpr.y{background:#FFF5C2;color:#7A6300} .cpr.o{background:#FFE4CC;color:#A4500B} .cpr.r{background:#FDE2DF;color:#B03A2E}
+tr.cmp-c td:first-child{cursor:pointer} tr.cmp-c td:first-child .flecha{display:inline-block;width:14px;color:var(--violeta);font-size:11px}
+tr.cjt td{background:#FBFAFC;font-size:13px} tr.cjt td:first-child{padding-left:34px;color:var(--tx)}
+.cprley{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--mut);margin:6px 0}
 .aviso{border-left:4px solid var(--aviso);background:#FFF8E6;padding:10px 14px;border-radius:6px;font-size:14px;margin:10px 0}
 .aviso.mal{border-color:var(--mal);background:#FDEDEB;color:var(--tx)}
 .aviso.ok{border-color:var(--bien);background:#E8F5EE}
@@ -80,7 +91,7 @@ tr.total td{font-weight:700;background:#FBFAFC}
 .vacio{color:var(--mut);font-style:italic;padding:14px}
 #cargando{padding:60px 16px;text-align:center;color:var(--mut)}
 footer{max-width:1280px;margin:0 auto;padding:0 16px 40px;color:var(--mut);font-size:12px}
-@media(max-width:600px){.embudo .fila{grid-template-columns:1fr 70px 70px 70px;}.embudo .barra{grid-column:1 / -1}.kpi .v{font-size:22px}}
+@media(max-width:600px){.embudo .fila{grid-template-columns:110px 1fr 50px 62px 62px}.kpi .v{font-size:22px}}
 /* ---- resumen tipo tablero de control ---- */
 main{max-width:1440px} .top,nav,footer{max-width:1440px}
 .panel4{display:grid;gap:12px;grid-template-columns:repeat(4,1fr)}
@@ -174,16 +185,18 @@ p.periodo{margin:0 0 10px;font-size:12px}
 
 <!-- ============ EMBUDO ============ -->
 <section id="embudo">
+ <div class="embs">
   <div class="card embudo">
-    <h3>Inscripción con pago en la web · todo el catálogo</h3>
+    <div class="hd"><h3 class="tit">Inscripción con pago en la web</h3><span class="conv" id="convWeb"></span></div>
     <div id="embWeb"></div>
-    <p class="nota">Cada barra muestra cuántas veces pasó ese paso en el período. “Pérdida vs paso anterior” dice cuánto se cayó de un paso al siguiente; “Pérdida vs Vio una ficha” dice cuánto se perdió desde el comienzo. Un “+” significa que ese paso tuvo más que el anterior: pasa en “Eligió modalidad”, porque quien ya tenía la sesión abierta no pasa por “Ingresó o se registró”. Una persona que entra dos veces a la misma ficha cuenta dos veces.</p>
+    <p class="nota">Pasá el mouse por cada paso para ver qué cuenta. “+”: ese paso tuvo más que el anterior (quien ya tenía sesión abierta no pasa por el ingreso).</p>
   </div>
-  <div class="card embudo" style="margin-top:12px">
-    <h3>Inscripción por formulario de Google</h3>
+  <div class="card embudo">
+    <div class="hd"><h3 class="tit">Inscripción por formulario de Google</h3><span class="conv" id="convForm"></span></div>
     <div id="embForm"></div>
-    <p class="nota">Algunas formaciones se inscriben con un formulario de Google y no con pago en la web. El sitio ve el clic que lleva al formulario, pero no si la persona lo completó: eso vive en la hoja de respuestas de cada formulario, que todavía no está conectada.</p>
+    <p class="nota">Las respuestas del formulario todavía no están conectadas.</p>
   </div>
+ </div>
 </section>
 
 <!-- ============ WHATSAPP ============ -->
@@ -207,6 +220,7 @@ p.periodo{margin:0 0 10px;font-size:12px}
 <!-- ============ MEDIOS ============ -->
 <section id="medios">
   <h2 style="margin-top:0">Meta</h2>
+  <div class="cprley">Tocá una campaña para ver sus conjuntos. Costo por resultado en dólares: <span class="cpr v">hasta 1</span><span class="cpr y">1 a 1,6</span><span class="cpr o">1,6 a 2</span><span class="cpr r">más de 2</span></div>
   <div class="wrap"><table id="tMeta"></table></div>
   <p class="nota">El resultado de cada campaña sale de cómo está configurada: si lleva a WhatsApp, cuenta conversaciones; si lleva al sitio, clics en el enlace. La cuenta publicitaria factura en dólares: los pesos usan el dólar oficial del Banco Nación (venta) del día de cada gasto.</p>
 
@@ -503,35 +517,40 @@ function pComparar() {
 }
 
 function embudo(el, pasos) {
-  const max = Math.max(1, pasos[0].v);
-  // Pérdida: cuánto se perdió respecto de un paso. Si el paso tiene MÁS que el de referencia
-  // (por ejemplo, quien ya tenía la sesión abierta saltea "Ingresó o se registró"), se muestra con +.
+  const max = Math.max(1, pasos[0].v || 0);
+  // Pérdida respecto de un paso. Si el paso tiene MÁS que la referencia, se muestra con +.
   const perdida = (v, ref) => {
-    if (!ref) return '';
+    if (v == null || !ref) return '';
     if (v > ref) return '+' + pct(v - ref, ref);
     return '−' + pct(ref - v, ref);
   };
-  const cab = '<div class="fila cab"><span></span><span></span><div>Cantidad</div><div>Pérdida vs paso anterior</div><div>Pérdida vs “' + pasos[0].n + '”</div></div>';
+  const cab = '<div class="fila cab"><span></span><span></span><div>Cant.</div><div>Pérdida vs anterior</div><div>Pérdida vs inicio</div></div>';
   el.innerHTML = cab + pasos.map((p, i) => {
     const prev = i ? pasos[i - 1].v : null;
-    return '<div class="fila"><div class="nom"><b>' + p.n + '</b><span>' + p.e + '</span></div><div class="barra"><i style="width:' + Math.max(1, Math.min(100, 100 * p.v / max)) + '%"></i></div><div class="num" style="text-align:right;font-weight:700">' + n0(p.v) + '</div><div class="caida">' + (i ? perdida(p.v, prev) : '') + '</div><div class="caida">' + (i ? perdida(p.v, pasos[0].v) : '') + '</div></div>';
+    const w = p.v == null ? 30 : Math.max(1.5, Math.min(100, 100 * p.v / max));
+    return '<div class="fila" title="' + esc(p.e) + '"><div class="nom">' + p.n + '</div><div class="fbar' + (p.v == null ? ' nd' : '') + '"><i style="width:' + w + '%"></i></div><div class="num" style="text-align:right;font-weight:700">' + (p.v == null ? '—' : n0(p.v)) + '</div><div class="caida">' + (i ? perdida(p.v, prev) : '') + '</div><div class="caida">' + (i > 1 ? perdida(p.v, pasos[0].v) : '') + '</div></div>';
   }).join('');
 }
 function pEmbudo() {
   const e = n => ev(P.a, P.b, n);
-  embudo($('embWeb'), [
+  const web = [
     { n: 'Vio una ficha', e: 'Abrió la página de una formación', v: e('view_item') },
     { n: 'Tocó “Abonar”', e: 'Quiso empezar a inscribirse', v: e('clic_abonar') },
-    { n: 'Ingresó o se registró', e: 'Para pagar hace falta tener cuenta', v: e('login') + e('sign_up') },
+    { n: 'Ingresó / registró', e: 'Para pagar hace falta tener cuenta', v: e('login') + e('sign_up') },
     { n: 'Eligió modalidad', e: 'Seleccionó modalidad y cantidad de asistentes', v: e('add_to_cart') },
-    { n: 'Completó asistentes', e: 'Cargó los datos de quienes asisten', v: e('begin_checkout') },
+    { n: 'Cargó asistentes', e: 'Cargó los datos de quienes asisten', v: e('begin_checkout') },
     { n: 'Salió a pagar', e: 'Fue a Mercado Pago', v: e('add_payment_info') },
-    { n: 'Inscripción confirmada', e: 'Volvió con el pago aprobado', v: e('purchase') },
-  ]);
-  embudo($('embForm'), [
-    { n: 'Vio una ficha', e: 'Todas las formaciones', v: e('view_item') },
+    { n: 'Inscripción', e: 'Volvió con el pago aprobado', v: e('purchase') },
+  ];
+  const form = [
+    { n: 'Vio una ficha', e: 'Abrió la página de una formación (todas)', v: e('view_item') },
     { n: 'Fue al formulario', e: 'Tocó el link al formulario de Google', v: e('clic_google_form') },
-  ]);
+    { n: 'Lo completó', e: 'Vive en la hoja de respuestas de cada formulario: todavía no está conectada', v: null },
+  ];
+  embudo($('embWeb'), web);
+  embudo($('embForm'), form);
+  $('convWeb').innerHTML = 'Conversión ficha → inscripción <b>' + pct(web[6].v, web[0].v) + '</b>';
+  $('convForm').innerHTML = 'Ficha → formulario <b>' + pct(form[1].v, form[0].v) + '</b>';
 }
 
 function pWhatsapp() {
@@ -556,24 +575,69 @@ function pWhatsapp() {
 }
 
 const NOMBRE_RES = { conversaciones: 'Conversaciones', clics_enlace: 'Clics en el enlace', landing: 'Visitas a la página', alcance: 'Personas alcanzadas', compras: 'Compras', leads: 'Formularios', thruplays: 'Reproducciones', visitas_perfil: 'Visitas al perfil' };
-function pMedios() {
-  const m = {};
-  D.meta.filter(x => en(x, P.a, P.b)).forEach(x => {
-    const o = m[x.campania] = m[x.campania] || { campania: x.campania, tipo: x.resultado_tipo, destino: x.destino, res: 0, usd: 0, ars: 0, imp: 0, clics: 0 };
-    o.res += x.resultados; o.usd += x.gasto_usd; o.ars += x.gasto_ars || 0; o.imp += x.impresiones; o.clics += x.clics_enlace;
-  });
-  const L = Object.values(m).filter(o => o.usd > 0 || o.res > 0).map(o => (o.costo = o.res ? o.ars / o.res : null, o));
-  tabla($('tMeta'), [
-    { t: 'Campaña', k: 'campania', f: (v, r) => esc(v) + ' <span class="tag ' + (r.tipo === 'conversaciones' ? 't' : '') + '">' + (r.destino === 'WHATSAPP' ? 'WhatsApp' : 'Sitio web') + '</span>' },
-    { t: 'Resultado', k: 'tipo', f: v => NOMBRE_RES[v] || v },
+/* Costo por resultado en dólares, con color: hasta 1 verde, hasta 1,6 amarillo, hasta 2 naranja, más de 2 rojo */
+function cprUsd(v) {
+  if (v == null) return '—';
+  const c = v <= 1 ? 'v' : v <= 1.6 ? 'y' : v <= 2 ? 'o' : 'r';
+  return '<span class="cpr ' + c + '">US$ ' + v.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '</span>';
+}
+const abiertas = new Set();
+/* Tabla de Meta: cada campaña se despliega y muestra sus conjuntos de anuncios con las mismas columnas */
+function tablaMeta(el, L) {
+  const cols = [
+    { t: 'Campaña / conjunto', k: 'campania' },
+    { t: 'Resultado', k: 'tipo', f: v => NOMBRE_RES[v] || v || '' },
     { t: 'Resultados', k: 'res', f: v => '<b>' + n0(v) + '</b>' },
     { t: 'Inversión US$', k: 'usd', f: usd },
     { t: 'Inversión en pesos', k: 'ars', f: pesos },
     { t: 'Costo por resultado', k: 'costo', f: pesos },
+    { t: 'Costo por resultado US$', k: 'costoUsd', f: cprUsd },
     { t: 'Impresiones', k: 'imp', f: n0 },
     { t: 'Clics en el enlace', k: 'clics', f: n0 },
-  ], L, { orden: 'ars', total: { usd: suma(L, 'usd'), ars: suma(L, 'ars'), imp: suma(L, 'imp'), clics: suma(L, 'clics') } });
-
+  ];
+  const st = el._orden || { k: 'ars', dir: -1 };
+  el._orden = st;
+  const ordenar = arr => arr.slice().sort((x, y) => {
+    const a = x[st.k], b = y[st.k];
+    if (a == null && b == null) return 0; if (a == null) return 1; if (b == null) return -1;
+    return (typeof a === 'string' ? a.localeCompare(b) : a - b) * st.dir;
+  });
+  const celdas = (r, primera) => cols.map((c, i) => '<td' + (i ? ' class="num"' : '') + '>' + (i === 0 ? primera : (c.f ? c.f(r[c.k], r) : esc(r[c.k]))) + '</td>').join('');
+  const cab = '<thead><tr>' + cols.map(c => '<th class="ord" data-k="' + c.k + '">' + c.t + (st.k === c.k ? (st.dir < 0 ? ' ▾' : ' ▴') : '') + '</th>').join('') + '</tr></thead>';
+  let cuerpo = '';
+  ordenar(L).forEach(r => {
+    const ab = abiertas.has(r.campania), n = r.hijos.length;
+    const tag = ' <span class="tag ' + (r.tipo === 'conversaciones' ? 't' : '') + '">' + (r.destino === 'WHATSAPP' ? 'WhatsApp' : 'Sitio web') + '</span>';
+    const nom = (n ? '<span class="flecha">' + (ab ? '▼' : '▶') + '</span>' : '<span class="flecha"></span>') + esc(r.campania) + tag + (n ? ' <span class="tag g">' + n + (n === 1 ? ' conjunto' : ' conjuntos') + '</span>' : '');
+    cuerpo += '<tr class="cmp-c" data-c="' + esc(r.campania) + '">' + celdas(r, nom) + '</tr>';
+    if (ab) ordenar(r.hijos).forEach(h => { cuerpo += '<tr class="cjt">' + celdas(h, esc(h.campania)) + '</tr>'; });
+  });
+  if (!L.length) cuerpo = '<tr><td colspan="' + cols.length + '" class="vacio">Sin datos en este período.</td></tr>';
+  const T = { usd: suma(L, 'usd'), ars: suma(L, 'ars'), imp: suma(L, 'imp'), clics: suma(L, 'clics') };
+  const tot = L.length ? '<tr class="total"><td>Total</td><td></td><td></td><td class="num">' + usd(T.usd) + '</td><td class="num">' + pesos(T.ars) + '</td><td></td><td></td><td class="num">' + n0(T.imp) + '</td><td class="num">' + n0(T.clics) + '</td></tr>' : '';
+  el.innerHTML = cab + '<tbody>' + cuerpo + tot + '</tbody>';
+  el.querySelectorAll('th.ord').forEach(th => th.onclick = () => {
+    const k = th.dataset.k; st.dir = st.k === k ? -st.dir : -1; st.k = k; tablaMeta(el, L);
+  });
+  el.querySelectorAll('tr.cmp-c').forEach(tr => tr.onclick = () => {
+    const c = tr.dataset.c; abiertas.has(c) ? abiertas.delete(c) : abiertas.add(c); tablaMeta(el, L);
+  });
+}
+function pMedios() {
+  const m = {};
+  D.meta.filter(x => en(x, P.a, P.b)).forEach(x => {
+    const o = m[x.campania] = m[x.campania] || { campania: x.campania, tipo: x.resultado_tipo, destino: x.destino, res: 0, usd: 0, ars: 0, imp: 0, clics: 0, hijos: {} };
+    o.res += x.resultados; o.usd += x.gasto_usd; o.ars += x.gasto_ars || 0; o.imp += x.impresiones; o.clics += x.clics_enlace;
+  });
+  (D.conjuntos || []).filter(x => en(x, P.a, P.b) && m[x.campania]).forEach(x => {
+    const h = m[x.campania].hijos;
+    const o = h[x.conjunto] = h[x.conjunto] || { campania: x.conjunto, tipo: x.resultado_tipo, res: 0, usd: 0, ars: 0, imp: 0, clics: 0 };
+    o.res += x.resultados; o.usd += x.gasto_usd; o.ars += x.gasto_ars || 0; o.imp += x.impresiones; o.clics += x.clics_enlace;
+  });
+  const costos = o => (o.costo = o.res ? o.ars / o.res : null, o.costoUsd = o.res ? o.usd / o.res : null, o);
+  const L = Object.values(m).filter(o => o.usd > 0 || o.res > 0).map(costos);
+  L.forEach(o => { o.hijos = Object.values(o.hijos).filter(h => h.usd > 0 || h.res > 0).map(costos); });
+  tablaMeta($('tMeta'), L);
   const p = {};
   D.trafico.filter(x => en(x, P.a, P.b) && /^Paid|Cross-network|Display/.test(x.canal)).forEach(x => {
     const k = x.fuente_medio;
@@ -667,7 +731,7 @@ async function cargar() {
     const r = await fetch(url);
     const j = await r.json();
     D = j;
-    ['ventas', 'alertas', 'meta', 'trafico', 'eventos', 'items', 'compras'].forEach(k => D[k] = filas(j[k]));
+    ['ventas', 'alertas', 'meta', 'conjuntos', 'trafico', 'eventos', 'items', 'compras'].forEach(k => D[k] = filas(j[k] || { c: [], f: [] }));
   } catch (e) {
     $('cargando').innerHTML = 'No se pudieron cargar los datos. Probá recargar la página en unos minutos.';
     return;
