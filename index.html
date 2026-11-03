@@ -87,7 +87,7 @@ tr.cjt td{background:#FBFAFC;font-size:13px} tr.cjt td:first-child{padding-left:
 .cprley{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--mut);margin:6px 0}
 /* tabla de Meta compacta: una línea por fila */
 #tMeta{font-size:12.5px} #tMeta th,#tMeta td{padding:4px 10px;line-height:1.3} #tMeta th{font-size:11.5px;white-space:normal;vertical-align:bottom}
-#tMeta td:first-child{white-space:nowrap;max-width:430px;overflow:hidden;text-overflow:ellipsis;min-width:0}
+#tMeta td:first-child{white-space:nowrap} #tMeta .c1{max-width:440px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #tMeta .tag{font-size:10.5px;padding:0 6px} #tMeta .cpr{min-width:56px;padding:0 6px}
 #tMeta tr.cjt td{font-size:12px} #tMeta tr.cjt td:first-child{padding-left:30px}
 #tMeta tr.cjt.abre td:first-child{cursor:pointer} #tMeta tr.cjt .flecha{display:inline-block;width:14px;color:var(--violeta);font-size:10px}
@@ -618,7 +618,7 @@ function tablaMeta(el, L) {
     if (a == null && b == null) return 0; if (a == null) return 1; if (b == null) return -1;
     return (typeof a === 'string' ? a.localeCompare(b) : a - b) * st.dir;
   });
-  const celdas = (r, primera) => cols.map((c, i) => '<td' + (i ? ' class="num"' : '') + '>' + (i === 0 ? primera : (c.f ? c.f(r[c.k], r) : esc(r[c.k]))) + '</td>').join('');
+  const celdas = (r, primera) => cols.map((c, i) => '<td' + (i ? ' class="num"' : '') + '>' + (i === 0 ? '<div class="c1">' + primera + '</div>' : (c.f ? c.f(r[c.k], r) : esc(r[c.k]))) + '</td>').join('');
   const cab = '<thead><tr>' + cols.map(c => '<th class="ord" data-k="' + c.k + '">' + c.t + (st.k === c.k ? (st.dir < 0 ? ' ▾' : ' ▴') : '') + '</th>').join('') + '</tr></thead>';
   let cuerpo = '';
   ordenar(L).forEach(r => {
