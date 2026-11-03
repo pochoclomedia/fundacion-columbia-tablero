@@ -160,7 +160,7 @@ p.periodo{margin:0 0 10px;font-size:12px}
 
   <h2>Por WhatsApp o recepción</h2>
   <div class="wrap"><table id="tFoff"></table></div>
-  <p class="nota">Salen de la planilla de ventas que carga el equipo. Los nombres se agrupan por actividad: “cacao mayo” y “Cacao Mayo” cuentan juntas. Las ventas en dólares se cuentan pero no se suman a los pesos.</p>
+  <p class="nota">Salen de la planilla de ventas que carga el equipo. Los nombres se agrupan por actividad: “cacao mayo” y “Cacao Mayo” cuentan juntas. Lo pagado en dólares se pasa a pesos con el dólar oficial BNA del día del pago.</p>
 </section>
 
 <!-- ============ COMPARAR ============ -->
@@ -296,7 +296,7 @@ function calc(a, b) {
   const meta = D.meta.filter(x => en(x, a, b));
   const ven = D.ventas.filter(x => en(x, a, b));
   const comp = D.compras.filter(x => en(x, a, b));
-  const venArs = ven.filter(x => x.moneda === 'ARS' && x.importe != null);
+  const venArs = ven.filter(x => x.importe != null);   // ya viene en pesos (lo pagado en dólares, convertido)
   const metaWa = meta.filter(x => x.resultado_tipo === 'conversaciones');
   return {
     sesiones: suma(tr, 'sesiones'),
@@ -456,7 +456,8 @@ function pFormaciones() {
     const k = x.actividad || 'Sin identificar';
     const o = off[k] = off[k] || { actividad: k, tipo: x.tipo, n: 0, ars: 0, usd: 0, sinImporte: 0, sena: 0 };
     o.n++;
-    if (x.importe == null) o.sinImporte++; else if (x.moneda === 'USD') o.usd += x.importe; else o.ars += x.importe;
+    if (x.importe == null) o.sinImporte++; else o.ars += x.importe;
+    if (x.importe_usd) o.usd += x.importe_usd;
     if (x.es_sena === 'si') o.sena++;
   });
   const offL = Object.values(off).filter(o => !q || o.actividad.toLowerCase().includes(q));
@@ -464,7 +465,7 @@ function pFormaciones() {
     { t: 'Actividad', k: 'actividad', f: (v, r) => esc(v) + (r.tipo === 'formacion' ? ' <span class="tag">formación</span>' : '') },
     { t: 'Ventas', k: 'n', f: v => '<b>' + n0(v) + '</b>' },
     { t: 'Ingresos en pesos', k: 'ars', f: pesos },
-    { t: 'En dólares', k: 'usd', f: v => v ? usd(v) : '—' },
+    { t: 'Pagado en dólares', k: 'usd', f: v => v ? usd(v) : '—' },
     { t: 'Señas', k: 'sena', f: v => v ? n0(v) : '—' },
     { t: 'Sin importe legible', k: 'sinImporte', f: v => v ? '<span class="mal">' + n0(v) + '</span>' : '—' },
   ], offL, { orden: 'n', total: { n: suma(offL, 'n'), ars: suma(offL, 'ars'), usd: suma(offL, 'usd'), sena: suma(offL, 'sena'), sinImporte: suma(offL, 'sinImporte') } });
@@ -608,7 +609,7 @@ function pSitio() {
   tabla($('tAcc'), [{ t: 'Acción', k: 'n' }, { t: 'Veces', k: 'v', f: n0 }, { t: 'Período anterior', k: 'ant', f: n0 }], acc, { orden: 'v' });
 }
 
-const ALERTA_TXT = { importe_dudoso: 'No se puede leer el importe', sin_importe: 'Falta el importe', importe_cero: 'Importe en cero', importe_en_dolares: 'Importe en dólares (no se suma a los pesos)', importe_atipico: 'Importe muy distinto al habitual', fecha_ilegible: 'No se puede leer la fecha', fecha_fuera_de_mes: 'La fecha no corresponde al mes de la pestaña', actividad_sin_mapear: 'Actividad que el tablero todavía no reconoce' };
+const ALERTA_TXT = { importe_dudoso: 'No se puede leer el importe', sin_importe: 'Falta el importe', importe_cero: 'Importe en cero', importe_en_dolares: 'Importe en dólares: se pasa a pesos con el dólar BNA del día', importe_sin_miles: 'Importe cargado sin los miles (ej. $28 en vez de $28.000): se tomó en miles', importe_atipico: 'Importe muy distinto al habitual', fecha_ilegible: 'No se puede leer la fecha', fecha_fuera_de_mes: 'La fecha no corresponde al mes de la pestaña', actividad_sin_mapear: 'Actividad que el tablero todavía no reconoce' };
 const FUENTE_TXT = { ventas: 'Planilla de ventas por fuera de la web', meta: 'Meta (pauta)', cotizacion: 'Dólar oficial BNA', ga4: 'Google Analytics (sitio)', google_ads: 'Google Ads' };
 function pMedicion() {
   const est = Object.keys(FUENTE_TXT).map(k => {
@@ -663,8 +664,8 @@ async function cargar() {
     return;
   }
   $('cargando').style.display = 'none'; $('main').style.display = '';
-  const g = D.generado;
-  $('actualizado').textContent = 'Datos hasta el ' + fechaL(D.hasta) + ' · actualizado ' + fechaL(g.slice(0, 10)) + ' ' + g.slice(11, 16);
+  const g = Object.values(D.estado || {}).map(e => e.cuando).filter(Boolean).sort().pop() || D.generado;   // última corrida real
+  $('actualizado').textContent = 'Datos hasta el ' + fechaL(D.hasta) + ' · última actualización ' + fechaL(g.slice(0, 10)) + ' ' + g.slice(11, 16);
   $('desde').value = sumar(D.hasta, -29); $('hasta').value = D.hasta; $('desde').max = $('hasta').max = D.hasta;
   $('pie').innerHTML = 'Inscripción en la web = pago confirmado en la tienda (o inscripción a una actividad gratuita). Inscripción por WhatsApp o recepción = fila de la planilla que carga el equipo. Conversaciones de Meta, clics a WhatsApp y contactos de Clientify miden cosas distintas: no se suman. Dólar oficial BNA del último día: ' + pesos(D.cotizacion.ultima) + '.';
   const h = location.hash.slice(1);
