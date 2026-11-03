@@ -61,18 +61,20 @@ tr.total td{font-weight:700;background:#FBFAFC}
 .graf{position:relative;height:240px}
 .leyenda{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--mut);margin-bottom:8px}
 .leyenda i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
-.embs{display:grid;gap:12px;grid-template-columns:3fr 2fr;align-items:start}
+.embs{display:grid;gap:12px;grid-template-columns:3fr 2fr;align-items:stretch}
 .embs .embudo + .embudo .fila{grid-template-columns:118px 1fr 50px 66px 66px} @media(max-width:1000px){.embs{grid-template-columns:1fr}}
-.embudo{padding:12px 16px}
-.embudo .hd{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:4px}
-.embudo .hd .conv{font-size:12px;color:var(--mut)} .embudo .hd .conv b{font:700 18px Raleway,sans-serif;color:var(--violeta-osc)}
-.embudo .fila{display:grid;grid-template-columns:150px 1fr 60px 74px 74px;gap:8px;align-items:center;margin:2px 0;font-size:13px}
+.embudo{padding:12px 16px;display:flex;flex-direction:column}
+.embudo .cuerpo{flex:1;display:flex;flex-direction:column}
+.embudo .hd{margin-bottom:6px} .embudo .hd .tit{margin:0}
+.embudo .hd .conv{display:block;font-size:12px;color:var(--mut);margin-top:2px} .embudo .hd .conv b{font:700 18px Raleway,sans-serif;color:var(--violeta-osc)}
+.embudo .fila{display:grid;grid-template-columns:150px 1fr 60px 74px 74px;gap:8px;align-items:center;margin:0;font-size:13px}
+.embudo .fila:not(.cab){flex:1;min-height:30px}
 .embudo .fila.cab{font-size:11px;color:var(--mut);font-weight:700;line-height:1.15;margin-bottom:4px}
 .embudo .fila.cab div{text-align:right}
 .embudo .nom{font-weight:700;cursor:help;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.fbar{height:22px;display:flex;justify-content:center}
-.fbar i{display:block;height:100%;background:var(--violeta);border-radius:4px}
-.fbar.nd i{background:repeating-linear-gradient(45deg,var(--violeta-claro),var(--violeta-claro) 5px,#fff 5px,#fff 10px);border:1px dashed var(--violeta)}
+.fbar{align-self:stretch;padding-bottom:2px}
+.fbar i{display:block;height:100%;background:var(--violeta)}
+.fbar.nd i{background:repeating-linear-gradient(45deg,var(--violeta-claro),var(--violeta-claro) 5px,#fff 5px,#fff 10px)}
 .embudo .nota{margin:6px 0 0;font-size:11px}
 .num{font-variant-numeric:tabular-nums}
 .caida{font-size:12px;text-align:right;color:var(--mut);font-variant-numeric:tabular-nums}
@@ -81,6 +83,11 @@ tr.total td{font-weight:700;background:#FBFAFC}
 tr.cmp-c td:first-child{cursor:pointer} tr.cmp-c td:first-child .flecha{display:inline-block;width:14px;color:var(--violeta);font-size:11px}
 tr.cjt td{background:#FBFAFC;font-size:13px} tr.cjt td:first-child{padding-left:34px;color:var(--tx)}
 .cprley{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--mut);margin:6px 0}
+/* tabla de Meta compacta: una línea por fila */
+#tMeta{font-size:12.5px} #tMeta th,#tMeta td{padding:4px 10px;line-height:1.3} #tMeta th{font-size:11.5px;white-space:normal;vertical-align:bottom}
+#tMeta td:first-child{white-space:nowrap;max-width:430px;overflow:hidden;text-overflow:ellipsis;min-width:0}
+#tMeta .tag{font-size:10.5px;padding:0 6px} #tMeta .cpr{min-width:56px;padding:0 6px}
+#tMeta tr.cjt td{font-size:12px} #tMeta tr.cjt td:first-child{padding-left:30px}
 .aviso{border-left:4px solid var(--aviso);background:#FFF8E6;padding:10px 14px;border-radius:6px;font-size:14px;margin:10px 0}
 .aviso.mal{border-color:var(--mal);background:#FDEDEB;color:var(--tx)}
 .aviso.ok{border-color:var(--bien);background:#E8F5EE}
@@ -188,12 +195,12 @@ p.periodo{margin:0 0 10px;font-size:12px}
  <div class="embs">
   <div class="card embudo">
     <div class="hd"><h3 class="tit">Inscripción con pago en la web</h3><span class="conv" id="convWeb"></span></div>
-    <div id="embWeb"></div>
+    <div id="embWeb" class="cuerpo"></div>
     <p class="nota">Pasá el mouse por cada paso para ver qué cuenta. “+”: ese paso tuvo más que el anterior (quien ya tenía sesión abierta no pasa por el ingreso).</p>
   </div>
   <div class="card embudo">
     <div class="hd"><h3 class="tit">Inscripción por formulario de Google</h3><span class="conv" id="convForm"></span></div>
-    <div id="embForm"></div>
+    <div id="embForm" class="cuerpo"></div>
     <p class="nota">Las respuestas del formulario todavía no están conectadas.</p>
   </div>
  </div>
@@ -517,7 +524,6 @@ function pComparar() {
 }
 
 function embudo(el, pasos) {
-  const max = Math.max(1, pasos[0].v || 0);
   // Pérdida respecto de un paso. Si el paso tiene MÁS que la referencia, se muestra con +.
   const perdida = (v, ref) => {
     if (v == null || !ref) return '';
@@ -527,8 +533,12 @@ function embudo(el, pasos) {
   const cab = '<div class="fila cab"><span></span><span></span><div>Cant.</div><div>Pérdida vs anterior</div><div>Pérdida vs inicio</div></div>';
   el.innerHTML = cab + pasos.map((p, i) => {
     const prev = i ? pasos[i - 1].v : null;
-    const w = p.v == null ? 30 : Math.max(1.5, Math.min(100, 100 * p.v / max));
-    return '<div class="fila" title="' + esc(p.e) + '"><div class="nom">' + p.n + '</div><div class="fbar' + (p.v == null ? ' nd' : '') + '"><i style="width:' + w + '%"></i></div><div class="num" style="text-align:right;font-weight:700">' + (p.v == null ? '—' : n0(p.v)) + '</div><div class="caida">' + (i ? perdida(p.v, prev) : '') + '</div><div class="caida">' + (i > 1 ? perdida(p.v, pasos[0].v) : '') + '</div></div>';
+    // Forma de embudo: cada paso es un tramo que se angosta de 100% a 30% del ancho.
+    // El ancho marca el orden de los pasos; las cantidades y pérdidas están en las columnas.
+    const ancho = k => 100 - 70 * k / pasos.length;
+    const a = (100 - ancho(i)) / 2, b = (100 - ancho(i + 1)) / 2;
+    const forma = 'clip-path:polygon(' + a + '% 0,' + (100 - a) + '% 0,' + (100 - b) + '% 100%,' + b + '% 100%);opacity:' + (1 - 0.45 * i / pasos.length);
+    return '<div class="fila" title="' + esc(p.e) + '"><div class="nom">' + p.n + '</div><div class="fbar' + (p.v == null ? ' nd' : '') + '"><i style="' + forma + '"></i></div><div class="num" style="text-align:right;font-weight:700">' + (p.v == null ? '—' : n0(p.v)) + '</div><div class="caida">' + (i ? perdida(p.v, prev) : '') + '</div><div class="caida">' + (i > 1 ? perdida(p.v, pasos[0].v) : '') + '</div></div>';
   }).join('');
 }
 function pEmbudo() {
@@ -610,7 +620,7 @@ function tablaMeta(el, L) {
     const tag = ' <span class="tag ' + (r.tipo === 'conversaciones' ? 't' : '') + '">' + (r.destino === 'WHATSAPP' ? 'WhatsApp' : 'Sitio web') + '</span>';
     const nom = (n ? '<span class="flecha">' + (ab ? '▼' : '▶') + '</span>' : '<span class="flecha"></span>') + esc(r.campania) + tag + (n ? ' <span class="tag g">' + n + (n === 1 ? ' conjunto' : ' conjuntos') + '</span>' : '');
     cuerpo += '<tr class="cmp-c" data-c="' + esc(r.campania) + '">' + celdas(r, nom) + '</tr>';
-    if (ab) ordenar(r.hijos).forEach(h => { cuerpo += '<tr class="cjt">' + celdas(h, esc(h.campania)) + '</tr>'; });
+    if (ab) ordenar(r.hijos).forEach(h => { cuerpo += '<tr class="cjt">' + celdas(h, '<span title="' + esc(h.campania) + '">' + esc(h.campania) + '</span>') + '</tr>'; });
   });
   if (!L.length) cuerpo = '<tr><td colspan="' + cols.length + '" class="vacio">Sin datos en este período.</td></tr>';
   const T = { usd: suma(L, 'usd'), ars: suma(L, 'ars'), imp: suma(L, 'imp'), clics: suma(L, 'clics') };
