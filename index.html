@@ -35,6 +35,9 @@ nav button.on{color:var(--violeta-osc);border-color:var(--violeta)}
 main{max-width:1280px;margin:0 auto;padding:20px 16px 60px}
 section{display:none} section.on{display:block}
 .grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.grid3{display:grid;gap:12px;grid-template-columns:repeat(3,1fr)} @media(max-width:760px){.grid3{grid-template-columns:1fr}}
+h2.bloque{margin:22px 0 10px} #kpis h2.bloque:first-child{margin-top:6px}
+p.periodo{margin:0 0 4px}
 .card{background:var(--panel);border:1px solid var(--linea);border-radius:12px;padding:16px}
 .kpi .k{color:var(--mut);font-size:13px}
 .kpi .v{font:700 26px Raleway,sans-serif;margin-top:4px;color:var(--tx)}
@@ -117,8 +120,8 @@ footer{max-width:1280px;margin:0 auto;padding:0 16px 40px;color:var(--mut);font-
 
 <!-- ============ RESUMEN ============ -->
 <section id="resumen" class="on">
-  <div class="grid" id="kpis"></div>
-  <p class="nota" id="notaPeriodo"></p>
+  <p class="nota periodo" id="notaPeriodo"></p>
+  <div id="kpis"></div>
 
   <h2>Inscripciones en el tiempo</h2>
   <div class="card">
@@ -130,7 +133,7 @@ footer{max-width:1280px;margin:0 auto;padding:0 16px 40px;color:var(--mut);font-
     <div class="leyenda"><span><i style="background:var(--violeta)"></i>Meta (en pesos, dólar BNA del día)</span></div>
     <div class="graf"><canvas id="gInv"></canvas></div>
   </div>
-  <p class="nota">Las inscripciones en la web se miden desde el 23 de octubre de 2026, cuando quedó instalada la medición nueva. Las ventas por WhatsApp o recepción salen de la planilla que carga el equipo de la Fundación, desde mayo de 2026.</p>
+  <p class="nota">Las inscripciones en la web se miden desde el 23 de octubre de 2026, cuando quedó instalada la medición nueva. Las inscripciones por WhatsApp o recepción salen de la planilla que carga el equipo de la Fundación, desde mayo de 2026.</p>
 </section>
 
 <!-- ============ FORMACIONES ============ -->
@@ -370,23 +373,37 @@ function porDia(arr, a, b, k, filtro) {
 function pResumen() {
   const A = calc(P.a, P.b), B = calc(P.pa, P.pb);
   const costoConv = A.convWa ? A.gastoWaArs / A.convWa : null, costoConvB = B.convWa ? B.gastoWaArs / B.convWa : null;
+  const bloque = (titulo, tarjetas) => '<h2 class="bloque">' + titulo + '</h2><div class="grid3">' + tarjetas.join('') + '</div>';
+  const iTot = A.inscrWeb + A.ventasOff, iTotB = B.inscrWeb + B.ventasOff;
+  const $Tot = A.ingresosWeb + A.ingresosOff, $TotB = B.ingresosWeb + B.ingresosOff;
   $('kpis').innerHTML = [
-    kpi('Inscripciones totales', n0(A.inscrWeb + A.ventasOff), n0(A.inscrWeb) + ' en la web · ' + n0(A.ventasOff) + ' por WhatsApp o recepción', true),
-    kpi('Ingresos por inscripciones', pesosC(A.ingresosWeb + A.ingresosOff), pesosC(A.ingresosWeb) + ' web · ' + pesosC(A.ingresosOff) + ' fuera de la web', true),
-    kpi('Inversión en pauta', pesosC(A.invMetaArs), 'Meta ' + usd(A.invMetaUsd) + ' · Google: sin cuenta todavía', true),
-    kpi('Inscripciones en la web', n0(A.inscrWeb), n0(A.inscrWebPagas) + ' pagas · ' + n0(A.inscrWeb - A.inscrWebPagas) + ' gratuitas'),
-    kpi('Ventas por WhatsApp o recepción', n0(A.ventasOff), delta(A.ventasOff, B.ventasOff, 1)),
-    kpi('Conversaciones de WhatsApp desde Meta', n0(A.convMeta), delta(A.convMeta, B.convMeta, 1)),
-    kpi('Costo por conversación (Meta)', pesos(costoConv), delta(costoConv, costoConvB, -1)),
-    kpi('Clics a WhatsApp desde el sitio', n0(A.clicsWa), 'intención de contacto, no contactos'),
-    kpi('Visitas al sitio', n0(A.sesiones), delta(A.sesiones, B.sesiones, 1)),
+    bloque('Inscripciones', [
+      kpi('Inscripciones totales', n0(iTot), delta(iTot, iTotB, 1), true),
+      kpi('Inscripciones en la web', n0(A.inscrWeb), n0(A.inscrWebPagas) + ' pagas · ' + n0(A.inscrWeb - A.inscrWebPagas) + ' gratuitas'),
+      kpi('Inscripciones por WhatsApp o recepción', n0(A.ventasOff), delta(A.ventasOff, B.ventasOff, 1)),
+    ]),
+    bloque('Ingresos', [
+      kpi('Ingresos totales', pesos($Tot), delta($Tot, $TotB, 1), true),
+      kpi('Ingresos en la web', pesos(A.ingresosWeb), delta(A.ingresosWeb, B.ingresosWeb, 1)),
+      kpi('Ingresos por WhatsApp o recepción', pesos(A.ingresosOff), delta(A.ingresosOff, B.ingresosOff, 1)),
+    ]),
+    bloque('Pauta', [
+      kpi('Inversión en pauta', pesos(A.invMetaArs), 'Meta ' + usd(A.invMetaUsd) + ' · Google: sin cuenta todavía', true),
+      kpi('Conversaciones de WhatsApp desde Meta', n0(A.convMeta), delta(A.convMeta, B.convMeta, 1)),
+      kpi('Costo por conversación (Meta)', pesos(costoConv), delta(costoConv, costoConvB, -1)),
+    ]),
+    bloque('Sitio', [
+      kpi('Visitas al sitio', n0(A.sesiones), delta(A.sesiones, B.sesiones, 1), true),
+      kpi('Fichas de formaciones vistas', n0(A.fichas), delta(A.fichas, B.fichas, 1)),
+      kpi('Clics a WhatsApp desde el sitio', n0(A.clicsWa), 'intención de contacto, no contactos'),
+    ]),
   ].join('');
-  $('notaPeriodo').textContent = 'Período: ' + fechaL(P.a) + ' al ' + fechaL(P.b) + ' (' + P.n + ' días). Se compara contra los ' + P.n + ' días anteriores. El día de hoy no se incluye porque todavía está incompleto.';
+  $('notaPeriodo').textContent = 'Período: ' + fechaL(P.a) + ' al ' + fechaL(P.b) + ' (' + P.n + (P.n === 1 ? ' día' : ' días') + '). Se compara contra ' + (P.n === 1 ? 'el día anterior' : 'los ' + P.n + ' días anteriores') + '. El día de hoy no se incluye porque todavía está incompleto.';
   const L = rangoDias(P.a, P.b);
   barras('gInscr', L, [
     { n: 'En la web', d: porDia(D.trafico, P.a, P.b, 'compras'), c: C.violeta },
     { n: 'Por WhatsApp o recepción', d: porDia(D.ventas, P.a, P.b), c: C.teal }]);
-  barras('gInv', L, [{ n: 'Meta', d: porDia(D.meta, P.a, P.b, 'gasto_ars'), c: C.violeta }], pesosC);
+  barras('gInv', L, [{ n: 'Meta', d: porDia(D.meta, P.a, P.b, 'gasto_ars'), c: C.violeta }], pesos);
 }
 
 function itemsPeriodo(a, b) {
@@ -628,7 +645,7 @@ async function cargar() {
   const g = D.generado;
   $('actualizado').textContent = 'Datos hasta el ' + fechaL(D.hasta) + ' · actualizado ' + fechaL(g.slice(0, 10)) + ' ' + g.slice(11, 16);
   $('desde').value = sumar(D.hasta, -29); $('hasta').value = D.hasta; $('desde').max = $('hasta').max = D.hasta;
-  $('pie').innerHTML = 'Inscripción en la web = pago confirmado en la tienda (o inscripción a una actividad gratuita). Venta por WhatsApp o recepción = fila de la planilla que carga el equipo. Conversaciones de Meta, clics a WhatsApp y contactos de Clientify miden cosas distintas: no se suman. Dólar oficial BNA del último día: ' + pesos(D.cotizacion.ultima) + '.';
+  $('pie').innerHTML = 'Inscripción en la web = pago confirmado en la tienda (o inscripción a una actividad gratuita). Inscripción por WhatsApp o recepción = fila de la planilla que carga el equipo. Conversaciones de Meta, clics a WhatsApp y contactos de Clientify miden cosas distintas: no se suman. Dólar oficial BNA del último día: ' + pesos(D.cotizacion.ultima) + '.';
   const h = location.hash.slice(1);
   if (h && $(h) && $(h).tagName === 'SECTION') document.querySelector('#nav button[data-p="' + h + '"]').click(); else render();
 }
