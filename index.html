@@ -116,7 +116,12 @@ main{max-width:1440px} .top,nav,footer{max-width:1440px}
 .blk .row{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:6px 0;border-top:1px solid var(--linea);font-size:13px;align-items:baseline}
 .blk .row .l{color:var(--mut)} .blk .row .v{font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
 .blk .row .d{grid-column:1 / -1;font-size:11px;color:var(--mut);margin-top:-2px}
-.card.comp{padding:12px 16px} .card.comp .graf{height:190px} .card.comp .leyenda{margin-bottom:4px;font-size:12px}
+.card.comp{padding:12px 16px} .card.comp .graf{height:190px} .card.comp .graf.alto{height:116px} .card.comp .graf.bajo{height:84px;margin-top:4px}
+.leyenda i.ln{height:3px;border-radius:2px;vertical-align:3px}
+.evo{display:grid;gap:12px;grid-template-columns:repeat(3,1fr)} @media(max-width:900px){.evo{grid-template-columns:1fr}}
+.evo .graf{height:170px} .evo h4{margin:0 0 4px;font:700 11px Raleway,sans-serif;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)}
+.evohd{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.evohd select{font:inherit;font-size:13px;padding:4px 8px;border:1px solid var(--linea);border-radius:8px;background:#fff;max-width:420px} .card.comp .leyenda{margin-bottom:4px;font-size:12px}
 p.periodo{margin:0 0 10px;font-size:12px}
 </style>
 </head>
@@ -174,7 +179,20 @@ p.periodo{margin:0 0 10px;font-size:12px}
       <div class="graf"><canvas id="gInv"></canvas></div>
     </div>
   </div>
-  <p class="nota">Las inscripciones en la web se miden desde el 23/10/2026. Las inscripciones por WhatsApp o recepción salen de la planilla que carga el equipo, desde mayo de 2026.</p>
+  <div class="two" style="margin-top:12px">
+    <div class="card comp">
+      <h3 class="tit">Ingresos por día</h3>
+      <div class="leyenda"><span><i style="background:var(--violeta)"></i>En la web</span><span><i style="background:var(--teal)"></i>Por WhatsApp o recepción</span><span><i class="ln" style="background:var(--ambar)"></i>Ticket promedio</span></div>
+      <div class="graf"><canvas id="gIng"></canvas></div>
+    </div>
+    <div class="card comp">
+      <h3 class="tit">Visitas al sitio por día</h3>
+      <div class="leyenda"><span><i style="background:#C9B3D9"></i>Visitas</span><span>% de las visitas:</span><span><i class="ln" style="background:var(--violeta)"></i>Fichas vistas</span><span><i class="ln" style="background:var(--teal)"></i>Clics a WhatsApp</span><span><i class="ln" style="background:var(--ambar)"></i>Clics al formulario</span></div>
+      <div class="graf alto"><canvas id="gVis"></canvas></div>
+      <div class="graf bajo"><canvas id="gVisPct"></canvas></div>
+    </div>
+  </div>
+  <p class="nota">Las inscripciones en la web se miden desde el 23/10/2026. Las inscripciones por WhatsApp o recepción salen de la planilla que carga el equipo, desde mayo de 2026. El ticket promedio es ingresos dividido inscripciones pagas (web + WhatsApp o recepción). Una visita puede ver varias fichas, por eso “Fichas vistas” puede pasar el 100%.</p>
 </section>
 
 <!-- ============ FORMACIONES ============ -->
@@ -233,6 +251,14 @@ p.periodo{margin:0 0 10px;font-size:12px}
 <!-- ============ MEDIOS ============ -->
 <section id="medios">
   <h2 style="margin-top:0">Meta</h2>
+  <div class="card comp" style="margin-bottom:12px">
+    <div class="evohd"><h3 class="tit" style="margin:0">Evolución diaria</h3><select id="evoCamp" aria-label="Campaña"></select></div>
+    <div class="evo">
+      <div><h4>Resultados</h4><div class="graf"><canvas id="gEvoRes"></canvas></div></div>
+      <div><h4>Inversión US$</h4><div class="graf"><canvas id="gEvoInv"></canvas></div></div>
+      <div><h4>Costo por resultado US$</h4><div class="graf"><canvas id="gEvoCpr"></canvas></div></div>
+    </div>
+  </div>
   <div class="cprley">Tocá una campaña para ver sus conjuntos, y un conjunto para ver sus anuncios. Costo por resultado en dólares: <span class="cpr v">hasta 1</span><span class="cpr y">1 a 1,6</span><span class="cpr o">1,6 a 2</span><span class="cpr r">más de 2</span></div>
   <div class="wrap"><table id="tMeta"></table></div>
   <p class="nota">El resultado de cada campaña sale de cómo está configurada: si lleva a WhatsApp, cuenta conversaciones; si lleva al sitio, clics en el enlace. La cuenta publicitaria factura en dólares: los pesos usan el dólar oficial del Banco Nación (venta) del día de cada gasto.</p>
@@ -408,6 +434,48 @@ function barras(id, labelsDia, seriesDia, formato) {
     }
   });
 }
+/*
+ * Gráfico de barras apiladas + líneas de cociente (ticket, %, costo), en el mismo eje.
+ * Las líneas se calculan DESPUÉS de agrupar por semana o mes: suma(num) / suma(den).
+ * cfg: { barras: [{n, d, c}], lineas: [{n, num, den, k, c, desde, color(v)}], fmt, soloLineas }
+ */
+function grafico(id, labelsDia, cfg) {
+  const B = cfg.barras || [], Ls = cfg.lineas || [];
+  const todas = B.map(s => ({ d: s.d })).concat(...Ls.map(l => [{ d: l.num }, { d: l.den }]));
+  const { gran, labels, series } = agrupar(labelsDia, todas);
+  const titulo = l => gran === 'mes' ? 'Mes ' + l.slice(5, 7) + '/' + l.slice(0, 4) : gran === 'semana' ? 'Semana del ' + fechaL(l) : fechaL(l);
+  const tick = l => gran === 'mes' ? l.slice(5, 7) + '/' + l.slice(2, 4) : l.slice(8, 10) + '/' + l.slice(5, 7);
+  const fmt = cfg.fmt || n0;
+  const ds = B.map((s, i) => ({ type: 'bar', label: s.n, data: series[i].d, backgroundColor: s.c, borderRadius: 4, borderSkipped: 'start', maxBarThickness: 28, borderColor: '#fff', borderWidth: B.length > 1 ? { top: 2 } : 0, order: 2, stack: 'b' }));
+  Ls.forEach((l, j) => {
+    const num = series[B.length + 2 * j].d, den = series[B.length + 2 * j + 1].d;
+    const data = labels.map((f, i) => (l.desde && f < l.desde) || !den[i] ? null : num[i] / den[i] * (l.k || 1));
+    ds.push({ type: 'line', label: l.n, data, borderColor: l.c, backgroundColor: l.c, borderWidth: 2, tension: 0.25, spanGaps: true, order: 1, stack: 'l' + j,
+      pointRadius: l.color ? 3 : 2, pointHoverRadius: 4,
+      pointBackgroundColor: l.color ? data.map(v => v == null ? l.c : l.color(v)) : l.c, pointBorderColor: l.color ? data.map(v => v == null ? l.c : l.color(v)) : l.c });
+  });
+  if (graficos[id]) graficos[id].destroy();
+  graficos[id] = new Chart($(id), {
+    type: 'bar',
+    data: { labels, datasets: ds },
+    options: {
+      maintainAspectRatio: false, animation: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { display: false }, tooltip: { callbacks: {
+        title: it => titulo(it[0].label),
+        label: it => ' ' + it.dataset.label + ': ' + (it.raw == null ? '—' : (it.dataset.type === 'line' && cfg.fmtLinea ? cfg.fmtLinea(it.raw) : fmt(it.raw))) } } },
+      scales: {
+        x: { stacked: true, grid: { display: false }, ticks: { display: !cfg.sinX, color: C.mut, maxRotation: 0, autoSkip: true, maxTicksLimit: 10, callback: function (v) { return tick(this.getLabelForValue(v)); } } },
+        y: { stacked: !cfg.soloLineas, beginAtZero: true, grid: { color: C.linea }, border: { display: false }, ticks: { color: C.mut, maxTicksLimit: cfg.ticksY || 6, callback: v => (cfg.fmtEje || fmt)(v) } }
+      }
+    }
+  });
+}
+const pctEje = v => v.toLocaleString('es-AR', { maximumFractionDigits: 0 }) + '%';
+const pct1 = v => v.toLocaleString('es-AR', { maximumFractionDigits: 1 }) + '%';
+const usd2 = v => 'US$ ' + v.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const colorCpr = v => v <= 1 ? '#1A7F4B' : v <= 1.6 ? '#C9A400' : v <= 2 ? '#D9711C' : '#C0392B';
+
 function porDia(arr, a, b, k, filtro) {
   const m = {}; arr.forEach(x => { if (en(x, a, b) && (!filtro || filtro(x))) m[x.fecha] = (m[x.fecha] || 0) + (k ? (+x[k] || 0) : 1); });
   return rangoDias(a, b).map(f => m[f] || 0);
@@ -454,6 +522,28 @@ function pResumen() {
     { n: 'En la web', d: porDia(D.trafico, P.a, P.b, 'compras'), c: C.violeta },
     { n: 'Por WhatsApp o recepción', d: porDia(D.ventas, P.a, P.b), c: C.teal }]);
   barras('gInv', L, [{ n: 'Meta', d: porDia(D.meta, P.a, P.b, 'gasto_ars'), c: C.violeta }], pesos);
+
+  // Ingresos por día + ticket promedio (ingresos / inscripciones pagas, web + fuera de la web)
+  const ingWeb = porDia(D.trafico, P.a, P.b, 'ingresos'), ingOff = porDia(D.ventas, P.a, P.b, 'importe');
+  const pagWeb = porDia(D.compras, P.a, P.b, 'compras', x => x.ingresos > 0), pagOff = porDia(D.ventas, P.a, P.b, null, x => x.importe > 0);
+  grafico('gIng', L, {
+    barras: [{ n: 'En la web', d: ingWeb, c: C.violeta }, { n: 'Por WhatsApp o recepción', d: ingOff, c: C.teal }],
+    lineas: [{ n: 'Ticket promedio', num: ingWeb.map((v, i) => v + ingOff[i]), den: pagWeb.map((v, i) => v + pagOff[i]), c: C.ambar }],
+    fmt: pesos, fmtEje: pesosC,
+  });
+
+  // Visitas por día (barras) y qué % de las visitas hizo cada acción (líneas, abajo)
+  const vis = porDia(D.trafico, P.a, P.b, 'sesiones');
+  const evD = n => porDia(D.eventos, P.a, P.b, 'eventos', x => x.evento === n);
+  grafico('gVis', L, { barras: [{ n: 'Visitas', d: vis, c: '#C9B3D9' }], sinX: true, ticksY: 4 });
+  grafico('gVisPct', L, {
+    soloLineas: true, fmt: pct1, fmtEje: pctEje, ticksY: 3,
+    lineas: [
+      { n: 'Fichas vistas', num: evD('view_item'), den: vis, k: 100, c: C.violeta, desde: INICIO_WEB },
+      { n: 'Clics a WhatsApp', num: evD('clic_whatsapp'), den: vis, k: 100, c: C.teal, desde: INICIO_WEB },
+      { n: 'Clics al formulario', num: evD('clic_google_form'), den: vis, k: 100, c: C.ambar, desde: INICIO_WEB },
+    ],
+  });
 }
 
 function itemsPeriodo(a, b) {
@@ -650,6 +740,22 @@ function tablaMeta(el, L) {
     const c = tr.dataset.c; abiertas.has(c) ? abiertas.delete(c) : abiertas.add(c); tablaMeta(el, L);
   });
 }
+/* Evolución diaria de una campaña de Meta: resultados, inversión y costo por resultado en dólares.
+   Una campaña por vez: sumar resultados de tipos distintos (conversaciones + clics) no tiene sentido. */
+function evoMeta(L) {
+  const sel = $('evoCamp');
+  const camps = L.slice().sort((x, y) => y.usd - x.usd);
+  const prev = sel.value;
+  sel.innerHTML = camps.map(c => '<option value="' + esc(c.campania) + '">' + esc(c.campania) + ' · ' + (NOMBRE_RES[c.tipo] || c.tipo) + '</option>').join('');
+  if (camps.some(c => c.campania === prev)) sel.value = prev;
+  sel.onchange = () => evoMeta(L);
+  const camp = sel.value, dias = rangoDias(P.a, P.b);
+  const f = x => x.campania === camp;
+  const res = porDia(D.meta, P.a, P.b, 'resultados', f), inv = porDia(D.meta, P.a, P.b, 'gasto_usd', f);
+  grafico('gEvoRes', dias, { barras: [{ n: 'Resultados', d: res, c: C.teal }] });
+  grafico('gEvoInv', dias, { barras: [{ n: 'Inversión US$', d: inv, c: C.violeta }], fmt: v => usd2(v), fmtEje: v => 'US$ ' + n0(v) });
+  grafico('gEvoCpr', dias, { soloLineas: true, lineas: [{ n: 'Costo por resultado US$', num: inv, den: res, c: '#9A8FA6', color: colorCpr }], fmt: usd2, fmtEje: v => 'US$ ' + v.toLocaleString('es-AR', { maximumFractionDigits: 2 }) });
+}
 function pMedios() {
   const m = {};
   D.meta.filter(x => en(x, P.a, P.b)).forEach(x => {
@@ -682,6 +788,7 @@ function pMedios() {
     o.hijos.forEach(h => { h.hijos = (h.hijos || []).filter(a => a.usd > 0 || a.res > 0).map(costos); });
   });
   tablaMeta($('tMeta'), L);
+  evoMeta(L);
   const p = {};
   D.trafico.filter(x => en(x, P.a, P.b) && /^Paid|Cross-network|Display/.test(x.canal)).forEach(x => {
     const k = x.fuente_medio;
