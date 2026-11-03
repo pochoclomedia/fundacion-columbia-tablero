@@ -61,7 +61,9 @@ tr.total td{font-weight:700;background:#FBFAFC}
 .graf{position:relative;height:240px}
 .leyenda{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--mut);margin-bottom:8px}
 .leyenda i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
-.embudo .fila{display:grid;grid-template-columns:minmax(180px,260px) 1fr 90px 80px;gap:12px;align-items:center;margin:10px 0}
+.embudo .fila{display:grid;grid-template-columns:minmax(180px,260px) 1fr 80px 120px 120px;gap:12px;align-items:center;margin:10px 0}
+.embudo .fila.cab{margin:4px 0 0;font-size:12px;color:var(--mut);font-weight:700}
+.embudo .fila.cab div{text-align:right}
 .embudo .nom b{display:block}
 .embudo .nom span{font-size:12px;color:var(--mut)}
 .barra{height:26px;background:var(--violeta-claro);border-radius:6px;overflow:hidden}
@@ -78,7 +80,7 @@ tr.total td{font-weight:700;background:#FBFAFC}
 .vacio{color:var(--mut);font-style:italic;padding:14px}
 #cargando{padding:60px 16px;text-align:center;color:var(--mut)}
 footer{max-width:1280px;margin:0 auto;padding:0 16px 40px;color:var(--mut);font-size:12px}
-@media(max-width:600px){.embudo .fila{grid-template-columns:1fr 70px;}.embudo .barra,.embudo .caida{grid-column:1 / -1}.kpi .v{font-size:22px}}
+@media(max-width:600px){.embudo .fila{grid-template-columns:1fr 70px 70px 70px;}.embudo .barra{grid-column:1 / -1}.kpi .v{font-size:22px}}
 /* ---- resumen tipo tablero de control ---- */
 main{max-width:1440px} .top,nav,footer{max-width:1440px}
 .panel4{display:grid;gap:12px;grid-template-columns:repeat(4,1fr)}
@@ -175,7 +177,7 @@ p.periodo{margin:0 0 10px;font-size:12px}
   <div class="card embudo">
     <h3>Inscripción con pago en la web · todo el catálogo</h3>
     <div id="embWeb"></div>
-    <p class="nota">Cada barra muestra cuántas veces pasó ese paso en el período. La columna gris es cuánto se perdió respecto del paso anterior. Una persona que entra dos veces a la misma ficha cuenta dos veces.</p>
+    <p class="nota">Cada barra muestra cuántas veces pasó ese paso en el período. “Pérdida vs paso anterior” dice cuánto se cayó de un paso al siguiente; “Pérdida vs Vio una ficha” dice cuánto se perdió desde el comienzo. Un “+” significa que ese paso tuvo más que el anterior: pasa en “Eligió modalidad”, porque quien ya tenía la sesión abierta no pasa por “Ingresó o se registró”. Una persona que entra dos veces a la misma ficha cuenta dos veces.</p>
   </div>
   <div class="card embudo" style="margin-top:12px">
     <h3>Inscripción por formulario de Google</h3>
@@ -502,10 +504,17 @@ function pComparar() {
 
 function embudo(el, pasos) {
   const max = Math.max(1, pasos[0].v);
-  el.innerHTML = pasos.map((p, i) => {
+  // Pérdida: cuánto se perdió respecto de un paso. Si el paso tiene MÁS que el de referencia
+  // (por ejemplo, quien ya tenía la sesión abierta saltea "Ingresó o se registró"), se muestra con +.
+  const perdida = (v, ref) => {
+    if (!ref) return '';
+    if (v > ref) return '+' + pct(v - ref, ref);
+    return '−' + pct(ref - v, ref);
+  };
+  const cab = '<div class="fila cab"><span></span><span></span><div>Cantidad</div><div>Pérdida vs paso anterior</div><div>Pérdida vs “' + pasos[0].n + '”</div></div>';
+  el.innerHTML = cab + pasos.map((p, i) => {
     const prev = i ? pasos[i - 1].v : null;
-    const caida = i && prev ? '−' + pct(Math.max(0, prev - p.v), prev) : '';
-    return '<div class="fila"><div class="nom"><b>' + p.n + '</b><span>' + p.e + '</span></div><div class="barra"><i style="width:' + Math.max(1, 100 * p.v / max) + '%"></i></div><div class="num" style="text-align:right;font-weight:700">' + n0(p.v) + '</div><div class="caida">' + caida + '</div></div>';
+    return '<div class="fila"><div class="nom"><b>' + p.n + '</b><span>' + p.e + '</span></div><div class="barra"><i style="width:' + Math.max(1, Math.min(100, 100 * p.v / max)) + '%"></i></div><div class="num" style="text-align:right;font-weight:700">' + n0(p.v) + '</div><div class="caida">' + (i ? perdida(p.v, prev) : '') + '</div><div class="caida">' + (i ? perdida(p.v, pasos[0].v) : '') + '</div></div>';
   }).join('');
 }
 function pEmbudo() {
