@@ -187,12 +187,11 @@ p.periodo{margin:0 0 10px;font-size:12px}
     </div>
     <div class="card comp">
       <h3 class="tit">Visitas al sitio por día</h3>
-      <div class="leyenda"><span><i style="background:#C9B3D9"></i>Visitas</span><span>% de las visitas:</span><span><i class="ln" style="background:var(--violeta)"></i>Fichas vistas</span><span><i class="ln" style="background:var(--teal)"></i>Clics a WhatsApp</span><span><i class="ln" style="background:var(--ambar)"></i>Clics al formulario</span></div>
-      <div class="graf alto"><canvas id="gVis"></canvas></div>
-      <div class="graf bajo"><canvas id="gVisPct"></canvas></div>
+      <div class="leyenda"><span><i style="background:var(--teal)"></i>Con clic a WhatsApp</span><span><i style="background:var(--ambar)"></i>Con clic al formulario de Google</span><span><i style="background:#C9B3D9"></i>Resto de las visitas</span></div>
+      <div class="graf"><canvas id="gVis"></canvas></div>
     </div>
   </div>
-  <p class="nota">Las inscripciones en la web se miden desde el 23/10/2026. Las inscripciones por WhatsApp o recepción salen de la planilla que carga el equipo, desde mayo de 2026. El ticket promedio es ingresos dividido inscripciones pagas (web + WhatsApp o recepción). Una visita puede ver varias fichas, por eso “Fichas vistas” puede pasar el 100%.</p>
+  <p class="nota">Las inscripciones en la web se miden desde el 23/10/2026. Las inscripciones por WhatsApp o recepción salen de la planilla que carga el equipo, desde mayo de 2026. El ticket promedio es ingresos dividido inscripciones pagas (web + WhatsApp o recepción). En las visitas, la barra entera es el total del día; adentro se pintan los clics a WhatsApp y al formulario (al pasar el mouse se ve qué % de las visitas son).</p>
 </section>
 
 <!-- ============ FORMACIONES ============ -->
@@ -454,6 +453,7 @@ function grafico(id, labelsDia, cfg) {
       pointRadius: l.color ? 3 : 2, pointHoverRadius: 4,
       pointBackgroundColor: l.color ? data.map(v => v == null ? l.c : l.color(v)) : l.c, pointBorderColor: l.color ? data.map(v => v == null ? l.c : l.color(v)) : l.c });
   });
+  const totalEn = it => ds.filter(d => d.type === 'bar').reduce((s, d) => s + (+d.data[it.dataIndex] || 0), 0);
   if (graficos[id]) graficos[id].destroy();
   graficos[id] = new Chart($(id), {
     type: 'bar',
@@ -463,7 +463,9 @@ function grafico(id, labelsDia, cfg) {
       interaction: { mode: 'index', intersect: false },
       plugins: { legend: { display: false }, tooltip: { callbacks: {
         title: it => titulo(it[0].label),
-        label: it => ' ' + it.dataset.label + ': ' + (it.raw == null ? '—' : (it.dataset.type === 'line' && cfg.fmtLinea ? cfg.fmtLinea(it.raw) : fmt(it.raw))) } } },
+        label: it => ' ' + it.dataset.label + ': ' + (it.raw == null ? '—' : (it.dataset.type === 'line' && cfg.fmtLinea ? cfg.fmtLinea(it.raw) : fmt(it.raw))) +
+          (cfg.pctDelTotal && it.dataset.type === 'bar' ? ' (' + pct(it.raw, totalEn(it)) + ' ' + cfg.pctDelTotal + ')' : ''),
+        footer: it => cfg.pctDelTotal ? 'Total: ' + fmt(totalEn(it[0])) : '' } } },
       scales: {
         x: { stacked: true, grid: { display: false }, ticks: { display: !cfg.sinX, color: C.mut, maxRotation: 0, autoSkip: true, maxTicksLimit: 10, callback: function (v) { return tick(this.getLabelForValue(v)); } } },
         y: { stacked: !cfg.soloLineas, beginAtZero: true, grid: { color: C.linea }, border: { display: false }, ticks: { color: C.mut, maxTicksLimit: cfg.ticksY || 6, callback: v => (cfg.fmtEje || fmt)(v) } }
@@ -532,17 +534,17 @@ function pResumen() {
     fmt: pesos, fmtEje: pesosC,
   });
 
-  // Visitas por día (barras) y qué % de las visitas hizo cada acción (líneas, abajo)
+  // Visitas por día: la barra entera es el total; adentro, los clics a WhatsApp y al formulario
   const vis = porDia(D.trafico, P.a, P.b, 'sesiones');
   const evD = n => porDia(D.eventos, P.a, P.b, 'eventos', x => x.evento === n);
-  grafico('gVis', L, { barras: [{ n: 'Visitas', d: vis, c: '#C9B3D9' }], sinX: true, ticksY: 4 });
-  grafico('gVisPct', L, {
-    soloLineas: true, fmt: pct1, fmtEje: pctEje, ticksY: 3,
-    lineas: [
-      { n: 'Fichas vistas', num: evD('view_item'), den: vis, k: 100, c: C.violeta, desde: INICIO_WEB },
-      { n: 'Clics a WhatsApp', num: evD('clic_whatsapp'), den: vis, k: 100, c: C.teal, desde: INICIO_WEB },
-      { n: 'Clics al formulario', num: evD('clic_google_form'), den: vis, k: 100, c: C.ambar, desde: INICIO_WEB },
+  const wa = evD('clic_whatsapp'), gf = evD('clic_google_form');
+  grafico('gVis', L, {
+    barras: [
+      { n: 'Con clic a WhatsApp', d: wa, c: C.teal },
+      { n: 'Con clic al formulario de Google', d: gf, c: C.ambar },
+      { n: 'Resto de las visitas', d: vis.map((v, i) => Math.max(0, v - wa[i] - gf[i])), c: '#C9B3D9' },
     ],
+    pctDelTotal: 'de las visitas',
   });
 }
 
