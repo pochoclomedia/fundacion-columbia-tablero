@@ -258,8 +258,9 @@ p.periodo{margin:0 0 10px;font-size:12px}
       <p class="nota">Son personas que tocaron un botón de WhatsApp en el sitio: muestran intención de contacto, no contactos confirmados.</p>
     </div>
     <div class="card">
-      <h3>Conversaciones que trajo la pauta de Meta</h3>
-      <div class="wrap" style="border:0"><table id="tWaMeta"></table></div>
+      <h3>Conversaciones que trajo la pauta de Meta, por día</h3>
+      <div class="graf"><canvas id="gWaMeta"></canvas></div>
+      <div class="wrap" style="border:0;margin-top:10px"><table id="tWaMeta"></table></div>
       <p class="nota">Las cuenta Meta: alguien vio un anuncio y abrió una conversación de WhatsApp. Estas conversaciones no pasan por el sitio. Cuántas terminan en inscripción se va a ver cuando crucemos con Clientify.</p>
     </div>
   </div>
@@ -272,9 +273,9 @@ p.periodo{margin:0 0 10px;font-size:12px}
   <div class="card comp" style="margin-bottom:12px">
     <div class="evohd"><h3 class="tit" style="margin:0">Evolución diaria</h3><select id="evoCamp" aria-label="Campaña"></select></div>
     <div class="evo">
-      <div><h4>Resultados</h4><div class="graf"><canvas id="gEvoRes"></canvas></div></div>
+      <div><h4 id="hEvoRes">Resultados</h4><div class="graf"><canvas id="gEvoRes"></canvas></div></div>
       <div><h4>Inversión US$</h4><div class="graf"><canvas id="gEvoInv"></canvas></div></div>
-      <div><h4>Costo por resultado US$</h4><div class="graf"><canvas id="gEvoCpr"></canvas></div></div>
+      <div><h4 id="hEvoCpr">Costo por resultado US$</h4><div class="graf"><canvas id="gEvoCpr"></canvas></div></div>
     </div>
   </div>
   <div class="cprley">Tocá una campaña para ver sus conjuntos, y un conjunto para ver sus anuncios. Costo por resultado en dólares: <span class="cpr v">hasta 1</span><span class="cpr y">1 a 1,6</span><span class="cpr o">1,6 a 2</span><span class="cpr r">más de 2</span></div>
@@ -714,6 +715,7 @@ function pWhatsapp() {
     kpi('Inscriptos que vinieron por WhatsApp', '—', 'cuando se conecte Clientify', true),
   ].join('');
   barras('gWa', rangoDias(P.a, P.b), [{ n: 'Clics a WhatsApp', d: porDia(D.eventos, P.a, P.b, 'eventos', x => x.evento === 'clic_whatsapp'), c: C.teal }]);
+  barras('gWaMeta', rangoDias(P.a, P.b), [{ n: 'Conversaciones de Meta', d: porDia(D.meta, P.a, P.b, 'conversaciones'), c: C.violeta }]);
   const m = {};
   D.meta.filter(x => en(x, P.a, P.b) && x.conversaciones > 0).forEach(x => {
     const o = m[x.campania] = m[x.campania] || { campania: x.campania, conv: 0, ars: 0 };
@@ -798,10 +800,15 @@ function evoMeta(L) {
   sel.onchange = () => evoMeta(L);
   const camp = sel.value, dias = rangoDias(P.a, P.b);
   const f = x => x.campania === camp;
+  const c = camps.find(x => x.campania === camp);
+  const nomRes = c ? (NOMBRE_RES[c.tipo] || c.tipo) : 'Resultados';                // qué es el resultado: conversaciones, visitas, etc.
+  const singular = { Conversaciones: 'conversación', 'Visitas a la página': 'visita a la página', 'Clics en el enlace': 'clic en el enlace', 'Personas alcanzadas': 'persona alcanzada', Compras: 'compra', Formularios: 'formulario', Reproducciones: 'reproducción', 'Visitas al perfil': 'visita al perfil' }[nomRes] || 'resultado';
+  $('hEvoRes').textContent = 'Resultados · ' + nomRes;
+  $('hEvoCpr').textContent = 'Costo por ' + singular + ' US$';
   const res = porDia(D.meta, P.a, P.b, 'resultados', f), inv = porDia(D.meta, P.a, P.b, 'gasto_usd', f);
-  grafico('gEvoRes', dias, { barras: [{ n: 'Resultados', d: res, c: C.teal }] });
+  grafico('gEvoRes', dias, { barras: [{ n: nomRes, d: res, c: C.teal }] });
   grafico('gEvoInv', dias, { barras: [{ n: 'Inversión US$', d: inv, c: C.violeta }], fmt: v => usd2(v), fmtEje: v => 'US$ ' + n0(v) });
-  grafico('gEvoCpr', dias, { soloLineas: true, lineas: [{ n: 'Costo por resultado US$', num: inv, den: res, c: '#9A8FA6', color: colorCpr }], fmt: usd2, fmtEje: v => 'US$ ' + v.toLocaleString('es-AR', { maximumFractionDigits: 2 }) });
+  grafico('gEvoCpr', dias, { soloLineas: true, lineas: [{ n: 'Costo por ' + singular + ' US$', num: inv, den: res, c: '#9A8FA6', color: colorCpr }], fmt: usd2, fmtEje: v => 'US$ ' + v.toLocaleString('es-AR', { maximumFractionDigits: 2 }) });
 }
 function pMedios() {
   const m = {};
