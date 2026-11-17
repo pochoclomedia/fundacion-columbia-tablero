@@ -717,8 +717,10 @@ function pWhatsapp() {
   barras('gWa', rangoDias(P.a, P.b), [{ n: 'Clics a WhatsApp', d: porDia(D.eventos, P.a, P.b, 'eventos', x => x.evento === 'clic_whatsapp'), c: C.teal }]);
   barras('gWaMeta', rangoDias(P.a, P.b), [{ n: 'Conversaciones de Meta', d: porDia(D.meta, P.a, P.b, 'conversaciones'), c: C.violeta }]);
   const m = {};
+  const ids = idsMeta();
   D.meta.filter(x => en(x, P.a, P.b) && x.conversaciones > 0).forEach(x => {
-    const o = m[x.campania] = m[x.campania] || { campania: x.campania, conv: 0, ars: 0 };
+    const k = ids.camp(x);
+    const o = m[k] = m[k] || { campania: ids.nomCamp(k), conv: 0, ars: 0 };
     o.conv += x.conversaciones; o.ars += x.gasto_ars || 0;
   });
   const L = Object.values(m).map(o => (o.costo = o.conv ? o.ars / o.conv : null, o));
@@ -761,12 +763,12 @@ function tablaMeta(el, L) {
   const cab = '<thead><tr>' + cols.map(c => '<th class="ord" data-k="' + c.k + '">' + c.t + (st.k === c.k ? (st.dir < 0 ? ' ▾' : ' ▴') : '') + '</th>').join('') + '</tr></thead>';
   let cuerpo = '';
   ordenar(L).forEach(r => {
-    const ab = abiertas.has(r.campania), n = r.hijos.length;
+    const ab = abiertas.has(r.key), n = r.hijos.length;
     const tag = ' <span class="tag ' + (r.tipo === 'conversaciones' ? 't' : '') + '">' + (r.destino === 'WHATSAPP' ? 'WhatsApp' : 'Sitio web') + '</span>';
     const nom = (n ? '<span class="flecha">' + (ab ? '▼' : '▶') + '</span>' : '<span class="flecha"></span>') + esc(r.campania) + tag + (n ? ' <span class="tag g">' + n + (n === 1 ? ' conjunto' : ' conjuntos') + '</span>' : '');
-    cuerpo += '<tr class="cmp-c" data-c="' + esc(r.campania) + '">' + celdas(r, nom) + '</tr>';
+    cuerpo += '<tr class="cmp-c" data-c="' + esc(r.key) + '">' + celdas(r, nom) + '</tr>';
     if (ab) ordenar(r.hijos).forEach(h => {
-      const k = r.campania + ' › ' + h.campania, na = (h.hijos || []).length, abA = abiertas.has(k);
+      const k = r.key + ' › ' + h.key, na = (h.hijos || []).length, abA = abiertas.has(k);
       const nomC = (na ? '<span class="flecha">' + (abA ? '▼' : '▶') + '</span>' : '<span class="flecha"></span>') + '<span title="' + esc(h.campania) + '">' + esc(h.campania) + '</span>' +
         (na ? ' <span class="tag g">' + na + (na === 1 ? ' anuncio' : ' anuncios') + '</span>' : '');
       cuerpo += '<tr class="cjt' + (na ? ' abre' : '') + '" data-c="' + esc(k) + '">' + celdas(h, nomC) + '</tr>';
@@ -789,18 +791,40 @@ function tablaMeta(el, L) {
     const c = tr.dataset.c; abiertas.has(c) ? abiertas.delete(c) : abiertas.add(c); tablaMeta(el, L);
   });
 }
+/*
+ * Campañas y conjuntos de Meta se agrupan por ID, no por nombre: si renombran una campaña
+ * (pasó el 6/11/2026: "2024_CAMPAÑA MENSAJES WA ARG" → "2026_..."), sigue siendo la misma,
+ * con todo su historial. Se muestra siempre el nombre más reciente.
+ */
+function idsMeta() {
+  if (D._ids) return D._ids;
+  const nomC = {}, nomJ = {}, porNomC = {}, porNomJ = {};
+  const ultimo = (mapa, k, nombre, f) => { if (!mapa[k] || f >= mapa[k].f) mapa[k] = { n: nombre, f }; };
+  D.meta.forEach(x => { const k = x.campania_id || x.campania; ultimo(nomC, k, x.campania, x.fecha); porNomC[x.campania] = k; });
+  (D.conjuntos || []).forEach(x => {
+    const kc = x.campania_id || porNomC[x.campania] || x.campania, kj = x.conjunto_id || kc + '|' + x.conjunto;
+    ultimo(nomJ, kj, x.conjunto, x.fecha); porNomJ[kc + '|' + x.conjunto] = kj;
+  });
+  D._ids = {
+    camp: x => x.campania_id || porNomC[x.campania] || x.campania,
+    conj: x => { const kc = x.campania_id || porNomC[x.campania] || x.campania; return x.conjunto_id || porNomJ[kc + '|' + x.conjunto] || kc + '|' + x.conjunto; },
+    nomCamp: k => (nomC[k] || {}).n || k,
+    nomConj: k => (nomJ[k] || {}).n || k,
+  };
+  return D._ids;
+}
 /* Evolución diaria de una campaña de Meta: resultados, inversión y costo por resultado en dólares.
    Una campaña por vez: sumar resultados de tipos distintos (conversaciones + clics) no tiene sentido. */
 function evoMeta(L) {
   const sel = $('evoCamp');
   const camps = L.slice().sort((x, y) => y.usd - x.usd);
   const prev = sel.value;
-  sel.innerHTML = camps.map(c => '<option value="' + esc(c.campania) + '">' + esc(c.campania) + ' · ' + (NOMBRE_RES[c.tipo] || c.tipo) + '</option>').join('');
-  if (camps.some(c => c.campania === prev)) sel.value = prev;
+  sel.innerHTML = camps.map(c => '<option value="' + esc(c.key) + '">' + esc(c.campania) + ' · ' + (NOMBRE_RES[c.tipo] || c.tipo) + '</option>').join('');
+  if (camps.some(c => c.key === prev)) sel.value = prev;
   sel.onchange = () => evoMeta(L);
-  const camp = sel.value, dias = rangoDias(P.a, P.b);
-  const f = x => x.campania === camp;
-  const c = camps.find(x => x.campania === camp);
+  const camp = sel.value, dias = rangoDias(P.a, P.b), ids = idsMeta();
+  const f = x => ids.camp(x) === camp;
+  const c = camps.find(x => x.key === camp);
   const nomRes = c ? (NOMBRE_RES[c.tipo] || c.tipo) : 'Resultados';                // qué es el resultado: conversaciones, visitas, etc.
   const singular = { Conversaciones: 'conversación', 'Visitas a la página': 'visita a la página', 'Clics en el enlace': 'clic en el enlace', 'Personas alcanzadas': 'persona alcanzada', Compras: 'compra', Formularios: 'formulario', Reproducciones: 'reproducción', 'Visitas al perfil': 'visita al perfil' }[nomRes] || 'resultado';
   $('hEvoRes').textContent = 'Resultados · ' + nomRes;
@@ -811,14 +835,15 @@ function evoMeta(L) {
   grafico('gEvoCpr', dias, { soloLineas: true, lineas: [{ n: 'Costo por ' + singular + ' US$', num: inv, den: res, c: '#9A8FA6', color: colorCpr }], fmt: usd2, fmtEje: v => 'US$ ' + v.toLocaleString('es-AR', { maximumFractionDigits: 2 }) });
 }
 function pMedios() {
-  const m = {};
+  const m = {}, ids = idsMeta();
   D.meta.filter(x => en(x, P.a, P.b)).forEach(x => {
-    const o = m[x.campania] = m[x.campania] || { campania: x.campania, tipo: x.resultado_tipo, destino: x.destino, res: 0, usd: 0, ars: 0, imp: 0, clics: 0, hijos: {} };
+    const k = ids.camp(x);
+    const o = m[k] = m[k] || { key: k, campania: ids.nomCamp(k), tipo: x.resultado_tipo, destino: x.destino, res: 0, usd: 0, ars: 0, imp: 0, clics: 0, hijos: {} };
     o.res += x.resultados; o.usd += x.gasto_usd; o.ars += x.gasto_ars || 0; o.imp += x.impresiones; o.clics += x.clics_enlace;
   });
-  (D.conjuntos || []).filter(x => en(x, P.a, P.b) && m[x.campania]).forEach(x => {
-    const h = m[x.campania].hijos;
-    const o = h[x.conjunto] = h[x.conjunto] || { campania: x.conjunto, tipo: x.resultado_tipo, res: 0, usd: 0, ars: 0, imp: 0, clics: 0 };
+  (D.conjuntos || []).filter(x => en(x, P.a, P.b) && m[ids.camp(x)]).forEach(x => {
+    const h = m[ids.camp(x)].hijos, kj = ids.conj(x);
+    const o = h[kj] = h[kj] || { key: kj, campania: ids.nomConj(kj), tipo: x.resultado_tipo, res: 0, usd: 0, ars: 0, imp: 0, clics: 0 };
     o.res += x.resultados; o.usd += x.gasto_usd; o.ars += x.gasto_ars || 0; o.imp += x.impresiones; o.clics += x.clics_enlace;
   });
   // Anuncios: números del período por anuncio; campaña, conjunto, miniatura y texto salen de su ficha
@@ -828,7 +853,7 @@ function pMedios() {
   (D.anuncios || []).filter(x => en(x, P.a, P.b)).forEach(x => {
     const f = ficha[x.anuncio_id];
     if (!f) return;
-    const o = ads[x.anuncio_id] = ads[x.anuncio_id] || { campania: f.anuncio, nombre: f.anuncio, texto: f.texto, mini: f.miniatura, camp: f.campania, conj: f.conjunto, res: 0, usd: 0, ars: 0, imp: 0, clics: 0 };
+    const o = ads[x.anuncio_id] = ads[x.anuncio_id] || { campania: f.anuncio, nombre: f.anuncio, texto: f.texto, mini: f.miniatura, camp: ids.camp(f), conj: ids.conj(f), res: 0, usd: 0, ars: 0, imp: 0, clics: 0 };
     o.res += x.resultados; o.usd += x.gasto_usd; o.ars += x.gasto_ars || 0; o.imp += x.impresiones; o.clics += x.clics_enlace;
   });
   Object.values(ads).forEach(a => {
